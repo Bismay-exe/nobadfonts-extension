@@ -1,0 +1,25 @@
+{
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules", "src/**/*.stories.ts"],
+
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "module": "esnext",
+    "lib": ["dom", "esnext", "dom.iterable", "es2019"],
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": ["chrome", "jest", "node"],
+    "baseUrl": "src",
+    "paths": {
+      "@stylebot/inject-css": ["apps/content/index"],
+      "@stylebot/*": [
+        "core/*/index",
+        "features/*/index",
+        "ui/*/index",
+        "apps/*/index"
+      ]
+    }
+  }
+}

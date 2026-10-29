@@ -1,0 +1,157 @@
+import { hasCliPermissions, setCliConnected } from '@stylebot/settings';
+import type { StylebotOptions } from '@stylebot/types';
+
+import { get as getOption } from '../options';
+import { reloadForGrant, resumeAfterGrantReload } from '../grant-reload';
+import { inspectCommands } from './inspect';
+import { pageCommands } from './pages';
+import { pointerCommands } from './pointer';
+import { profileCommands } from './profiles';
+import { CLI_PROTOCOL } from './protocol';
+import { styleCommands } from './styles';
+import type { CliCommands, CliRequest, CliResponse } from './types';
+
+const HOST_NAME = 'dev.stylebot.cli';
+
+// A missing host disconnects at once, so a port that outlives this has one.
+const CONNECTED_AFTER_MS = 500;
+const RELOADED_FOR_CLI_KEY = 'cli-reloaded-for-grant';
+
+const commands: CliCommands = {
+  ...pageCommands,
+  ...pointerCommands,
+  ...inspectCommands,
+  ...styleCommands,
+  ...profileCommands,
+};
+
+let port: chrome.runtime.Port | undefined;
+
+/**
+ * Connects to the Stylebot CLI's native host, which relays commands from
+ * the `stylebot` command line. A missing host just leaves the CLI offline.
+ */
+const connect = (): void => {
+  const connected = chrome.runtime.connectNative(HOST_NAME);
+  port = connected;
+
+  const settled = setTimeout(() => {
+    if (port === connected) {
+      setCliConnected(true);
+    }
+  }, CONNECTED_AFTER_MS);
+
+  connected.onDisconnect.addListener(() => {
+    // Reading lastError keeps a missing host from logging as unchecked.
+    void chrome.runtime.lastError;
+    clearTimeout(settled);
+
+    if (port === connected) {
+      port = undefined;
+      setCliConnected(false);
+    }
+  });
+
+  connected.onMessage.addListener(async (request: CliRequest) => {
+    const stamp = {
+      id: request.id,
+      protocol: CLI_PROTOCOL,
+      version: chrome.runtime.getManifest().version,
+    };
+    let response: CliResponse;
+
+    try {
+      const run = commands[request.command];
+
+      // The CLI explains a mismatch, from the protocol on the response.
+      if (request.protocol !== undefined && request.protocol !== CLI_PROTOCOL) {
+        throw new Error(
+          `The stylebot CLI speaks protocol ${request.protocol}, not ${CLI_PROTOCOL}`
+        );
+      }
+
+      if (!run) {
+        throw new Error(`Unknown command: ${request.command}`);
+      }
+
+      response = { ...stamp, result: await run(request.args ?? {}) };
+    } catch (e) {
+      response = {
+        ...stamp,
+        error: e instanceof Error ? e.message : String(e),
+      };
+    }
+
+    try {
+      connected.postMessage(response);
+    } catch {
+      // The host went away mid-request.
+    }
+  });
+};
+
+const disconnect = (): void => {
+  port?.disconnect();
+  port = undefined;
+  setCliConnected(false);
+};
+
+let pendingUpdate = Promise.resolve();
+let startedAfterGrantReload = Promise.resolve(false);
+
+/**
+ * Connects while the CLI setting is on and its permissions are granted, and
+ * disconnects otherwise. Updates run one at a time so two can't both connect.
+ */
+export const updateCliBridge = (): Promise<void> => {
+  pendingUpdate = pendingUpdate
+    .then(async () => {
+      const allowed =
+        (await getOption('cliAccess')) === true && (await hasCliPermissions());
+
+      if (allowed && !port) {
+        if (typeof chrome.runtime.connectNative === 'function') {
+          connect();
+          startedAfterGrantReload = Promise.resolve(false);
+        } else {
+          const reloaded = await startedAfterGrantReload;
+
+          if (!reloaded) {
+            await reloadForGrant(RELOADED_FOR_CLI_KEY, {
+              optionsRoute: '/basics',
+            });
+          } else {
+            console.error('Stylebot CLI: connectNative is unavailable.');
+          }
+        }
+      } else if (!allowed && port) {
+        disconnect();
+      }
+    })
+    .catch(e => console.error('Stylebot CLI:', e));
+
+  return pendingUpdate;
+};
+
+/**
+ * Keeps the CLI's connection in step with its setting and permissions. Call
+ * it synchronously at service worker start, for Chrome to wake it for them.
+ */
+export const initCliBridge = (): void => {
+  chrome.permissions.onAdded.addListener(updateCliBridge);
+  chrome.permissions.onRemoved.addListener(updateCliBridge);
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    const options = changes['options'];
+    const was = (options?.oldValue as StylebotOptions | undefined)?.cliAccess;
+    const is = (options?.newValue as StylebotOptions | undefined)?.cliAccess;
+
+    if (area === 'local' && was !== is) {
+      updateCliBridge();
+    }
+  });
+
+  setCliConnected(false);
+  startedAfterGrantReload = resumeAfterGrantReload(RELOADED_FOR_CLI_KEY);
+  updateCliBridge();
+};
