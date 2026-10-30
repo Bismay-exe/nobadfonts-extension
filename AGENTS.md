@@ -24,9 +24,8 @@ Browser extension (Chrome/Edge/Firefox) that lets users change the appearance of
 
 ## Workflow
 
-Always make changes in a new worktree, never directly on `main` or the checkout the
-session started in. Use the `EnterWorktree` tool before starting any edits, unless the
-session is already inside a worktree.
+Work directly in the main checkout, on `main`. Don't create a worktree unless the user
+asks for one.
 
 ## Commands
 
