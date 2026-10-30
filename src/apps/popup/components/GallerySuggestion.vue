@@ -66,9 +66,11 @@ export default Vue.extend({
   },
 
   computed: {
-    // Short, as in 1.2K; the title has the whole number.
+    // Short, in the extension's UI language; the title has the whole number.
     installsCount(): string {
-      return new Intl.NumberFormat(undefined, { notation: 'compact' }).format(
+      const locale = (chrome.i18n.getUILanguage?.() || 'en').replace('_', '-');
+
+      return new Intl.NumberFormat(locale, { notation: 'compact' }).format(
         this.styleData.installs
       );
     },

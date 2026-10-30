@@ -330,7 +330,7 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
       },
     },
 
-    i18n: { getMessage },
+    i18n: { getMessage, getUILanguage: () => 'en' },
 
     storage: {
       local: {
