@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 const HOME = '/Users/ankit';
 const HOST_DIR = `${HOME}/.stylebot/host`;
 const LAUNCHER = `${HOME}/.stylebot/native-host`;
@@ -69,12 +71,12 @@ describe('refreshHost', () => {
 
     expect(refreshHost()).toEqual({ repinned: false });
     expect(fs.copyFileSync).toBeCalledWith(
-      '/cli/host.mjs',
-      `${HOST_DIR}/host.mjs`
+      path.join('/cli', 'host.mjs'),
+      path.join(HOST_DIR, 'host.mjs')
     );
     expect(fs.copyFileSync).toBeCalledWith(
-      '/cli/paths.mjs',
-      `${HOST_DIR}/paths.mjs`
+      path.join('/cli', 'paths.mjs'),
+      path.join(HOST_DIR, 'paths.mjs')
     );
     expect(fs.writeFileSync).toBeCalledWith(`${HOST_DIR}/version`, '0.2.0\n');
   });
