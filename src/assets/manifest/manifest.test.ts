@@ -8,6 +8,13 @@ const GOOGLE_HOSTS = [
   'https://fonts.googleapis.com/*',
 ];
 
+// The NoBadFonts catalog is read from its Supabase project, and its CSS and
+// font files from the site itself.
+const NO_BAD_FONTS_HOSTS = [
+  'https://www.nobadfonts.in/*',
+  'https://wcegdxhvgwbeskaidlxr.supabase.co/*',
+];
+
 // The stylebot.dev bridge is covered by <all_urls>, so it adds no warning.
 const CONTENT_SCRIPT_MATCHES = [
   ['<all_urls>'],
@@ -35,7 +42,7 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       // to hosts <all_urls> already covers.
       'declarativeNetRequestWithHostAccess',
     ],
-    host_permissions: [...GOOGLE_HOSTS, '<all_urls>'],
+    host_permissions: [...GOOGLE_HOSTS, ...NO_BAD_FONTS_HOSTS, '<all_urls>'],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
   firefox: {
@@ -48,7 +55,7 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       'alarms',
       'idle',
     ],
-    host_permissions: GOOGLE_HOSTS,
+    host_permissions: [...GOOGLE_HOSTS, ...NO_BAD_FONTS_HOSTS],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
   safari: {
@@ -63,6 +70,7 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
     ],
     host_permissions: [
       ...GOOGLE_HOSTS,
+      ...NO_BAD_FONTS_HOSTS,
       'https://oauth2.googleapis.com/*',
       'http://127.0.0.1/*',
     ],

@@ -143,6 +143,40 @@ export type GetImportCss = {
   url: string;
 };
 
+export type GetNoBadFontsCatalog = {
+  name: 'GetNoBadFontsCatalog';
+};
+
+export type GetNoBadFontsVariants = {
+  name: 'GetNoBadFontsVariants';
+};
+
+// The NoBadFonts account this browser is signed in as, if any.
+export type GetNoBadFontsAccount = {
+  name: 'GetNoBadFontsAccount';
+};
+
+// Opens the tab that runs the NoBadFonts sign-in.
+export type StartNoBadFontsSignIn = {
+  name: 'StartNoBadFontsSignIn';
+};
+
+// Sent by that tab once it is loaded and can run the sign-in.
+export type NoBadFontsSignInReady = {
+  name: 'NoBadFontsSignInReady';
+};
+
+// Ends this browser's NoBadFonts session.
+export type NoBadFontsSignOut = {
+  name: 'NoBadFontsSignOut';
+};
+
+// Sent by the background to the extension's pages when the account changes.
+export type NoBadFontsAccountChanged = {
+  name: 'NoBadFontsAccountChanged';
+};
+
+
 export type GetCompiledStyles = {
   name: 'GetCompiledStyles';
 };
@@ -152,8 +186,8 @@ export type GetGoogleWebFontExists = {
   url: string;
 };
 
-export type GetGoogleFontFile = {
-  name: 'GetGoogleFontFile';
+export type GetWebFontFile = {
+  name: 'GetWebFontFile';
   url: string;
 };
 
@@ -406,9 +440,15 @@ type BackgroundPageMessage =
   | GetReadabilitySettings
   | SetReadabilitySettings
   | GetImportCss
+  | GetNoBadFontsCatalog
+  | GetNoBadFontsVariants
+  | GetNoBadFontsAccount
+  | StartNoBadFontsSignIn
+  | NoBadFontsSignInReady
+  | NoBadFontsSignOut
   | GetCompiledStyles
   | GetGoogleWebFontExists
-  | GetGoogleFontFile
+  | GetWebFontFile
   | RunGoogleDriveSync
   | GoogleSignInRedirect
   | ScanVersionHistory

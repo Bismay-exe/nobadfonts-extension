@@ -4,6 +4,8 @@ import actions from './actions';
 import mockState from './state.fixtures';
 import * as stylebotCss from '@stylebot/css';
 import * as googleFonts from '@stylebot/google-fonts';
+import * as noBadFonts from '@stylebot/no-bad-fonts';
+import type { NoBadFontsChoice } from '@stylebot/no-bad-fonts';
 import * as chromeUtils from '../utils/chrome';
 import * as page from '@stylebot/page-bridge';
 import * as galleryUtils from '../utils/gallery';
@@ -11,6 +13,7 @@ import * as galleryUtils from '../utils/gallery';
 jest.mock('postcss');
 jest.mock('@stylebot/css');
 jest.mock('@stylebot/google-fonts');
+jest.mock('@stylebot/no-bad-fonts');
 jest.mock('../utils/chrome');
 jest.mock('@stylebot/page-bridge');
 jest.mock('../utils/gallery');
@@ -1142,6 +1145,94 @@ describe('actions', () => {
       await actions.resetToGalleryVersion({ state, commit: mockCommit });
 
       expect(mockCommit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('NoBadFonts picker', () => {
+    const choice = {
+      target: 'h1',
+      kind: 'static',
+      font: { slug: 'rock-salt' },
+    } as NoBadFontsChoice;
+    const state = { ...mockState, activeSelector: 'h1', css: 'h1 { }' };
+
+    beforeEach(() => {
+      jest.mocked(noBadFonts.isNoBadFontsTarget).mockReturnValue(true);
+      jest.mocked(noBadFonts.buildNoBadFontsCss).mockReturnValue('picked');
+      jest
+        .mocked(noBadFonts.buildNoBadFontsPreviewCss)
+        .mockReturnValue('preview');
+    });
+
+    it('opens over the panel and closes help out of the way', () => {
+      actions.openNoBadFontsPicker({ commit: mockCommit });
+
+      expect(mockCommit).toHaveBeenNthCalledWith(1, 'setHelp', false);
+      expect(mockCommit).toHaveBeenNthCalledWith(
+        2,
+        'setNoBadFontsPickerVisible',
+        true
+      );
+    });
+
+    it('closing drops a preview and hides the picker', () => {
+      actions.closeNoBadFontsPicker({
+        commit: mockCommit,
+        dispatch: mockDispatch,
+      });
+
+      expect(mockDispatch).toBeCalledWith('clearNoBadFontsPreview');
+      expect(mockCommit).toBeCalledWith(
+        'setNoBadFontsPickerVisible',
+        false
+      );
+    });
+
+    it('previews the single face on the page without saving it', () => {
+      actions.previewNoBadFontsFont({ state }, choice);
+
+      expect(noBadFonts.buildNoBadFontsPreviewCss).toBeCalledWith(choice);
+      expect(noBadFonts.buildNoBadFontsCss).not.toBeCalled();
+      expect(mockBridge.setPreviewCss).toBeCalledWith({
+        css: 'preview',
+        forceImportant: true,
+      });
+    });
+
+    it('previews nothing for a target the picker does not own', () => {
+      jest.mocked(noBadFonts.isNoBadFontsTarget).mockReturnValue(false);
+
+      actions.previewNoBadFontsFont({ state }, choice);
+
+      expect(noBadFonts.buildNoBadFontsPreviewCss).not.toBeCalled();
+      expect(mockBridge.setPreviewCss).not.toBeCalled();
+    });
+
+    it('applies the built css as one step and closes the picker', () => {
+      actions.applyNoBadFontsFont({ state, dispatch: mockDispatch }, choice);
+
+      expect(mockDispatch).toHaveBeenNthCalledWith(1, 'applyCss', {
+        css: 'picked',
+        source: 'no-bad-fonts:h1:rock-salt',
+      });
+      expect(mockDispatch).toHaveBeenNthCalledWith(
+        2,
+        'closeNoBadFontsPicker'
+      );
+    });
+
+    it('applies nothing for a target the picker does not own', () => {
+      jest.mocked(noBadFonts.isNoBadFontsTarget).mockReturnValue(false);
+
+      actions.applyNoBadFontsFont({ state, dispatch: mockDispatch }, choice);
+
+      expect(mockDispatch).not.toBeCalled();
+    });
+
+    it('clears the preview stylesheet', () => {
+      actions.clearNoBadFontsPreview();
+
+      expect(mockBridge.setPreviewCss).toBeCalledWith(null);
     });
   });
 });

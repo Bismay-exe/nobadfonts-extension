@@ -5,6 +5,8 @@
 
       <the-keyboard-shortcuts-view v-if="help" />
 
+      <the-no-bad-fonts-picker v-else-if="noBadFontsPickerVisible" />
+
       <template v-else>
         <the-header ref="header" />
 
@@ -41,6 +43,7 @@ import ThePresetsEditor from './ThePresetsEditor.vue';
 import TheStylebotResizer from './TheStylebotResizer.vue';
 import TheWindowStatus from './TheWindowStatus.vue';
 import TheKeyboardShortcutsView from './shortcuts/TheKeyboardShortcutsView.vue';
+import TheNoBadFontsPicker from './no-bad-fonts/NoBadFontsPicker.vue';
 import TheGalleryStatus from './publish/TheGalleryStatus.vue';
 
 import type { StylebotEditingMode } from '@stylebot/types';
@@ -58,6 +61,7 @@ export default Vue.extend({
     TheStylebotResizer,
     TheWindowStatus,
     TheKeyboardShortcutsView,
+    TheNoBadFontsPicker,
     TheGalleryStatus,
   },
 
@@ -86,6 +90,10 @@ export default Vue.extend({
 
     help(): boolean {
       return this.$store.state.help;
+    },
+
+    noBadFontsPickerVisible(): boolean {
+      return this.$store.state.noBadFontsPickerVisible;
     },
 
     galleryKey(): string {

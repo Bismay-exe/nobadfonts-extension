@@ -43,6 +43,7 @@ const mockState: State = {
   readability: false,
   forceImportant: true,
   colorPickerVisible: false,
+  noBadFontsPickerVisible: false,
 
   options: defaultOptions,
   commands: defaultCommands,

@@ -18,6 +18,8 @@
 - [Side panel](side-panel.md) — docking the editor in Chrome's side panel, its optional permission, and the browsers that won't show it
 - [Selectors](selectors.md) — how the inspector picks a selector for an element
 - [CSS](css.md) — how edits land in the user's CSS, and how it's prepared and injected
+- [NoBadFonts](no-bad-fonts.md) — the typography picker's catalog, license rules and host permissions
+- [NoBadFonts account](account.md) — the OAuth sign-in, where the tokens live, and how a grant is revoked
 - [Readability](readability.md) — the reader view and how it loads
 - [Profiles](profiles.md) — several named stylesheets per site, how they're stored, saved and synced
 - [Sync](sync.md) — Google Drive sync and its three-way merge

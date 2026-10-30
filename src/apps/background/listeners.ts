@@ -37,9 +37,11 @@ import {
   GetReadabilitySettings,
   SetReadabilitySettings,
   GetImportCss,
+  GetNoBadFontsCatalog,
+  GetNoBadFontsVariants,
   GetCompiledStyles,
   GetGoogleWebFontExists,
-  GetGoogleFontFile,
+  GetWebFontFile,
   RunGoogleDriveSync,
   ScanVersionHistory,
   RestoreVersion,
@@ -55,6 +57,14 @@ import {
 } from './messages';
 
 import { updateBadge } from './badge';
+import {
+  GetNoBadFontsAccount,
+  NoBadFontsSignInReady,
+  NoBadFontsSignOut,
+  StartNoBadFontsSignIn,
+  isExtensionPage,
+  sentFromAuthTab,
+} from './account';
 import {
   isGalleryUpdatesAlarm,
   updateGalleryInstalls,
@@ -357,14 +367,45 @@ export const initListeners = (): void => {
         case 'GetImportCss':
           GetImportCss(message, sendResponse);
           return true;
+        case 'GetNoBadFontsCatalog':
+          GetNoBadFontsCatalog(sendResponse);
+          return true;
+        case 'GetNoBadFontsVariants':
+          GetNoBadFontsVariants(sendResponse);
+          return true;
+
+        case 'GetNoBadFontsAccount':
+          if (isExtensionPage(sender)) {
+            GetNoBadFontsAccount(sendResponse);
+            return true;
+          }
+          break;
+        case 'StartNoBadFontsSignIn':
+          if (isExtensionPage(sender)) {
+            StartNoBadFontsSignIn(sendResponse);
+            return true;
+          }
+          break;
+        case 'NoBadFontsSignInReady':
+          if (sentFromAuthTab(sender)) {
+            NoBadFontsSignInReady(sendResponse);
+            return true;
+          }
+          break;
+        case 'NoBadFontsSignOut':
+          if (isExtensionPage(sender)) {
+            NoBadFontsSignOut(sendResponse);
+            return true;
+          }
+          break;
         case 'GetCompiledStyles':
           GetCompiledStyles(sendResponse);
           return true;
         case 'GetGoogleWebFontExists':
           GetGoogleWebFontExists(message, sendResponse);
           return true;
-        case 'GetGoogleFontFile':
-          GetGoogleFontFile(message, sendResponse);
+        case 'GetWebFontFile':
+          GetWebFontFile(message, sendResponse);
           return true;
 
         case 'RunGoogleDriveSync':

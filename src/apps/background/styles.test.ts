@@ -26,7 +26,8 @@ import {
   deleteProfile,
   deleteStyle,
   getGoogleWebFontExists,
-  getGoogleFontFile,
+  getWebFontFile,
+  getImportCss,
   ensureCompiledStyles,
   holdWritesUntil,
 } from './styles';
@@ -658,28 +659,85 @@ describe('getGoogleWebFontExists', () => {
 
 const fontFileUrl = 'https://fonts.gstatic.com/s/muli/v1/a.woff2';
 
-describe('getGoogleFontFile', () => {
+describe('getWebFontFile', () => {
   it('resolves to the file as base64', async () => {
     fetchMock.mockResponse(() => Promise.resolve({ body: 'wOF2' }));
 
-    await expect(getGoogleFontFile(fontFileUrl)).resolves.toBe(btoa('wOF2'));
+    await expect(getWebFontFile(fontFileUrl)).resolves.toBe(btoa('wOF2'));
   });
 
-  it('fetches nothing outside Google Fonts', async () => {
+  it('resolves a NoBadFonts font file as base64', async () => {
+    const url =
+      'https://www.nobadfonts.in/font-file/a78af31f/rock-salt/rock-salt.woff2';
+    fetchMock.mockResponse(() => Promise.resolve({ body: 'wOF2' }));
+
+    await expect(getWebFontFile(url)).resolves.toBe(btoa('wOF2'));
+  });
+
+  it('fetches nothing outside the web font providers', async () => {
     fetchMock.mockClear();
 
     await expect(
-      getGoogleFontFile('https://example.com/a.woff2')
+      getWebFontFile('https://example.com/a.woff2')
     ).resolves.toBe('');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('is empty when the request fails', async () => {
     fetchMock.mockResponse(() => Promise.resolve({ status: 404 }));
-    await expect(getGoogleFontFile(fontFileUrl)).resolves.toBe('');
+    await expect(getWebFontFile(fontFileUrl)).resolves.toBe('');
 
     fetchMock.mockResponse(() => Promise.reject(new Error('offline')));
-    await expect(getGoogleFontFile(fontFileUrl)).resolves.toBe('');
+    await expect(getWebFontFile(fontFileUrl)).resolves.toBe('');
+  });
+});
+
+describe('getImportCss', () => {
+  const noBadFontsUrl =
+    'https://www.nobadfonts.in/css/rock-salt?weights=400,700';
+  const fontFace = `@font-face {
+  font-family: 'Rock Salt';
+  src: url('https://www.nobadfonts.in/font-file/a78af31f/rock-salt/rock-salt.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}`;
+
+  it('returns an ordinary import as it was served', async () => {
+    fetchMock.mockResponseOnce('a { color: red; }');
+
+    await expect(getImportCss('https://example.com/style.css')).resolves.toBe(
+      'a { color: red; }'
+    );
+  });
+
+  it('reduces NoBadFonts CSS to its safe @font-face rules', async () => {
+    fetchMock.mockResponseOnce(
+      `body { display: none; }\n${fontFace}\n@import url(https://example.com/evil.css);`
+    );
+
+    await expect(getImportCss(noBadFontsUrl)).resolves.toBe(fontFace);
+  });
+
+  it('refuses a NoBadFonts url that is not one of its CSS endpoints', async () => {
+    fetchMock.mockClear();
+
+    await expect(
+      getImportCss('https://www.nobadfonts.in/fonts/rock-salt')
+    ).resolves.toBe('');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('is empty for invalid CSS or a failed request', async () => {
+    fetchMock.mockResponseOnce('a { color: red;');
+    await expect(getImportCss('https://example.com/style.css')).resolves.toBe(
+      ''
+    );
+
+    fetchMock.mockResponseOnce(() => Promise.reject(new Error('offline')));
+    await expect(getImportCss('https://example.com/style.css')).resolves.toBe(
+      ''
+    );
   });
 });
 

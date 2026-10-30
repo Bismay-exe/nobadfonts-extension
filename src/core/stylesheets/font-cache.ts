@@ -1,13 +1,7 @@
+import { getWebFontFileUrls } from '@stylebot/utils';
+
 const FONT_CACHE_PREFIX = 'stylebot-font-cache:';
 const fontCacheKey = (url: string) => `${FONT_CACHE_PREFIX}${url}`;
-
-const GOOGLE_FONT_FILE_URLS = /https:\/\/fonts\.gstatic\.com\/[^"')\s]+/g;
-
-/**
- * The Google Fonts file urls the css loads.
- */
-export const getGoogleFontFileUrls = (css: string): Array<string> =>
-  css.match(GOOGLE_FONT_FILE_URLS) ?? [];
 
 /**
  * A font file the page's CSP blocked on an earlier load, as base64.
@@ -33,7 +27,7 @@ export const writeFontCache = (url: string, data: string): void => {
  * Removes cached font files that none of the css loads any more.
  */
 export const pruneFontCache = (liveCss: Array<string>): void => {
-  const liveUrls = new Set(liveCss.flatMap(getGoogleFontFileUrls));
+  const liveUrls = new Set(liveCss.flatMap(getWebFontFileUrls));
 
   try {
     const staleKeys: Array<string> = [];

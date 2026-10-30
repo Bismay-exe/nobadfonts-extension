@@ -299,6 +299,11 @@ export const openOptions = (): void => {
   window.close();
 };
 
+export const openAccountOptions = (): void => {
+  openOptionsPage('/account');
+  window.close();
+};
+
 export const openStyleInOptions = (url: string): void => {
   openOptionsPage(`/styles/edit?url=${encodeURIComponent(url)}`);
   window.close();

@@ -1,6 +1,11 @@
 import * as postcss from 'postcss';
 
-import { getCurrentTimestamp } from '@stylebot/utils';
+import {
+  getCurrentTimestamp,
+  isAllowedWebFontFileUrl,
+  isNoBadFontsCssUrl,
+  isNoBadFontsHostUrl,
+} from '@stylebot/utils';
 import { hashCss } from '@stylebot/gallery';
 import {
   COMPILED_STYLES_KEY,
@@ -37,6 +42,7 @@ import type {
 import { compileStyles } from './compiled-styles';
 import { recordStyleChange } from '@stylebot/history';
 import { scheduleSyncAfterEdit } from './sync-scheduler';
+import { sanitizeNoBadFontsCss } from './no-bad-fonts';
 
 export { getStylesForPage } from '@stylebot/saved-styles';
 
@@ -742,14 +748,12 @@ export const getGoogleWebFontExists = (url: string): Promise<boolean> => {
     .catch(() => false);
 };
 
-const GOOGLE_FONT_FILE = /^https:\/\/fonts\.gstatic\.com\//;
-
 /**
- * Fetches a Google Fonts file as base64, for a page whose CSP blocks loading
- * it. Any other url, or a failed request, resolves to an empty string.
+ * Fetches a font file as base64, for a page whose CSP blocks loading it. Any
+ * other url, or a failed request, resolves to an empty string.
  */
-export const getGoogleFontFile = async (url: string): Promise<string> => {
-  if (!GOOGLE_FONT_FILE.test(url)) {
+export const getWebFontFile = async (url: string): Promise<string> => {
+  if (!isAllowedWebFontFileUrl(url)) {
     return '';
   }
 
@@ -775,20 +779,28 @@ export const getGoogleFontFile = async (url: string): Promise<string> => {
 };
 
 /**
- * Fetches CSS from a url for import, resolving to an empty string on
- * failure or invalid CSS.
+ * Fetches CSS from a url for import, resolving to an empty string on failure
+ * or invalid CSS. NoBadFonts CSS is reduced to its @font-face rules and its
+ * own font files before it reaches the page; other paths on its host are
+ * refused outright.
  */
-export const getImportCss = (url: string): Promise<string> => {
-  return new Promise(resolve => {
-    fetch(url)
-      .then(response => response.text())
-      .then(css => {
-        postcss.parse(css);
-        resolve(css);
-      })
-      .catch(() => {
-        // if css is invalid, return back empty css
-        resolve('');
-      });
-  });
+export const getImportCss = async (url: string): Promise<string> => {
+  if (isNoBadFontsHostUrl(url) && !isNoBadFontsCssUrl(url)) {
+    return '';
+  }
+
+  try {
+    const response = await fetch(url);
+    const css = await response.text();
+
+    if (isNoBadFontsCssUrl(url)) {
+      return sanitizeNoBadFontsCss(css);
+    }
+
+    postcss.parse(css);
+    return css;
+  } catch {
+    // if css is invalid, return back empty css
+    return '';
+  }
 };

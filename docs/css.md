@@ -61,7 +61,12 @@ Firefox loads them under the page's policy, and a page with `default-src
 'self'` and no `font-src` (Hacker News, for one) blocks every Google Fonts
 file. Chrome and Edge exempt fonts in extension-injected CSS.
 
-When the page reports a blocked Google Fonts file, the background fetches it
+The same fallback covers NoBadFonts font files. The background also reduces an
+older saved NoBadFonts stylesheet to its `@font-face` rules, and only keeps
+`src` urls on NoBadFonts' own font-file hosts, before the page sees it. The
+picker itself now writes those rules directly instead of an `@import`.
+
+When the page reports a blocked web font file, the background fetches it
 and the page registers the font from its bytes, which makes no request for
 the policy to block. Only files the page actually blocked are handled, so it
 still loads just the character subsets it renders, and pages without such a

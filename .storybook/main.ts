@@ -11,6 +11,7 @@ const mock = (p: string) => path.resolve(__dirname, 'mocks', p);
 const dirs = packageDirs();
 
 const aliasedPackages = [
+  'account',
   'components',
   'icons',
   'css',
@@ -27,6 +28,7 @@ const aliasedPackages = [
   'settings',
   'google-fonts',
   'highlighter',
+  'no-bad-fonts',
   'page-bridge',
   'side-panel',
 ];

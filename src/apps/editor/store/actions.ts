@@ -19,6 +19,12 @@ import {
 } from '@stylebot/css';
 
 import { resolveGoogleFont } from '@stylebot/google-fonts';
+import {
+  buildNoBadFontsCss,
+  buildNoBadFontsPreviewCss,
+  isNoBadFontsTarget,
+} from '@stylebot/no-bad-fonts';
+import type { NoBadFontsChoice } from '@stylebot/no-bad-fonts';
 
 import type {
   CssDeclaration,
@@ -254,6 +260,11 @@ export default {
     commit: Commit;
     dispatch: Dispatch;
   }): void {
+    if (state.noBadFontsPickerVisible) {
+      dispatch('closeNoBadFontsPicker');
+      return;
+    }
+
     if (state.help) {
       commit('setHelp', false);
       return;
@@ -849,6 +860,79 @@ export default {
       css,
       forceImportant: state.forceImportant,
     });
+  },
+
+  /**
+   * Opens the NoBadFonts picker in place of the panel, so the catalog can
+   * take the full width on a narrow editor.
+   */
+  openNoBadFontsPicker({ commit }: { commit: Commit }): void {
+    commit('setHelp', false);
+    commit('setNoBadFontsPickerVisible', true);
+  },
+
+  /**
+   * Closes the picker and removes any variant it was previewing.
+   */
+  closeNoBadFontsPicker({
+    commit,
+    dispatch,
+  }: {
+    commit: Commit;
+    dispatch: Dispatch;
+  }): void {
+    dispatch('clearNoBadFontsPreview');
+    commit('setNoBadFontsPickerVisible', false);
+  },
+
+  /**
+   * Shows a selected NoBadFonts face on the chosen target without saving it.
+   * A newer preview or clearing one wins over an older request.
+   */
+  previewNoBadFontsFont(
+    { state }: { state: State },
+    choice: NoBadFontsChoice
+  ): void {
+    const request = ++previewRequest;
+
+    if (!isNoBadFontsTarget(choice.target, state.activeSelector)) {
+      return;
+    }
+
+    const css = buildNoBadFontsPreviewCss(choice);
+
+    if (request !== previewRequest) {
+      return;
+    }
+
+    getPageBridge().setPreviewCss({
+      css,
+      forceImportant: state.forceImportant,
+    });
+  },
+
+  clearNoBadFontsPreview(): void {
+    ++previewRequest;
+    getPageBridge().setPreviewCss(null);
+  },
+
+  /**
+   * Saves the selected NoBadFonts face as one undo step: its @font-face
+   * rules, the family and, for a static face, the weight and style it maps to.
+   */
+  applyNoBadFontsFont(
+    { state, dispatch }: { state: State; dispatch: Dispatch },
+    choice: NoBadFontsChoice
+  ): void {
+    if (!isNoBadFontsTarget(choice.target, state.activeSelector)) {
+      return;
+    }
+
+    dispatch('applyCss', {
+      css: buildNoBadFontsCss(state.css, choice),
+      source: `no-bad-fonts:${choice.target}:${choice.font.slug}`,
+    });
+    dispatch('closeNoBadFontsPicker');
   },
 
   /**

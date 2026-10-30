@@ -8,6 +8,7 @@ export * from './history';
 export * from './gallery';
 export * from './page-reading';
 export * from './styles';
+export * from './NoBadFonts';
 export * from './TabMessage';
 export * from './BackgroundPageMessage';
 export * from './BackgroundPageMessageResponse';

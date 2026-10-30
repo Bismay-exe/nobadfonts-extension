@@ -106,6 +106,8 @@ export type State = {
   // Other selectors for the last picked element.
   selectorAlternatives: SelectorAlternatives;
   colorPickerVisible: boolean;
+  // The full-panel NoBadFonts picker opened over the basic editor.
+  noBadFontsPickerVisible: boolean;
 
   options: StylebotOptions;
   commands: StylebotCommands | null;
@@ -151,6 +153,7 @@ export const createStore = (host: EditorHost): Store<State> => {
       previewSelector: '',
       selectorAlternatives: { existing: [], candidates: [] },
       colorPickerVisible: false,
+      noBadFontsPickerVisible: false,
 
       commands: null,
       options: defaultOptions,

@@ -9,7 +9,7 @@ import {
   setReadability,
   getImportCss,
   getGoogleWebFontExists,
-  getGoogleFontFile,
+  getWebFontFile,
   applyStylesToAllTabs,
   ensureCompiledStyles,
   setActiveProfile,
@@ -48,9 +48,11 @@ import type {
   ReadabilityStateChanged,
   SetReadabilitySettings as SetReadabilitySettingsType,
   GetImportCss as GetImportCssType,
+  GetNoBadFontsCatalogResponse,
+  GetNoBadFontsVariantsResponse,
   GetCompiledStylesResponse,
   GetGoogleWebFontExists as GetGoogleWebFontExistsType,
-  GetGoogleFontFile as GetGoogleFontFileType,
+  GetWebFontFile as GetWebFontFileType,
   RunGoogleDriveSync as RunGoogleDriveSyncType,
   GoogleSignInRedirect as GoogleSignInRedirectType,
   ScanVersionHistory as ScanVersionHistoryType,
@@ -73,7 +75,7 @@ import type {
   GetReadabilitySettingsResponse,
   GetImportCssResponse,
   GetGoogleWebFontExistsResponse,
-  GetGoogleFontFileResponse,
+  GetWebFontFileResponse,
   RunGoogleDriveSyncResponse,
   ScanVersionHistoryResponse,
   RestoreVersionResponse,
@@ -97,6 +99,11 @@ import {
 } from './readability-settings';
 
 import { get as getCommands } from './commands';
+
+import {
+  getNoBadFontsCatalog,
+  getNoBadFontsVariants,
+} from './no-bad-fonts';
 
 import {
   getAll as getAllRecentColors,
@@ -343,6 +350,18 @@ export const GetImportCss = async (
   sendResponse(css);
 };
 
+export const GetNoBadFontsCatalog = async (
+  sendResponse: (response: GetNoBadFontsCatalogResponse) => void
+): Promise<void> => {
+  sendResponse(await getNoBadFontsCatalog());
+};
+
+export const GetNoBadFontsVariants = async (
+  sendResponse: (response: GetNoBadFontsVariantsResponse) => void
+): Promise<void> => {
+  sendResponse(await getNoBadFontsVariants());
+};
+
 export const GetCompiledStyles = async (
   sendResponse: (response: GetCompiledStylesResponse) => void
 ): Promise<void> => {
@@ -358,12 +377,12 @@ export const GetGoogleWebFontExists = async (
   sendResponse(exists);
 };
 
-export const GetGoogleFontFile = async (
-  message: GetGoogleFontFileType,
+export const GetWebFontFile = async (
+  message: GetWebFontFileType,
 
-  sendResponse: (response: GetGoogleFontFileResponse) => void
+  sendResponse: (response: GetWebFontFileResponse) => void
 ): Promise<void> => {
-  sendResponse(await getGoogleFontFile(message.url));
+  sendResponse(await getWebFontFile(message.url));
 };
 
 /**

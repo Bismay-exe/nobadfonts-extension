@@ -27,19 +27,23 @@ const injectFontCss = (): void => {
   document.documentElement.appendChild(style);
 };
 
+let violationListener: ((event: any) => void) | null = null;
+
 /**
  * Starts watching and reports a font-src violation for the url. Calls the
  * listener directly, since jsdom won't dispatch a trusted event.
  */
 const reportViolation = (blockedURI: string): void => {
-  const addEventListener = jest.spyOn(document, 'addEventListener');
+  if (!violationListener) {
+    const addEventListener = jest.spyOn(document, 'addEventListener');
 
-  watchBlockedFonts();
+    watchBlockedFonts();
 
-  const listener = addEventListener.mock.calls[0][1] as (event: any) => void;
-  addEventListener.mockRestore();
+    violationListener = addEventListener.mock.calls[0][1] as (event: any) => void;
+    addEventListener.mockRestore();
+  }
 
-  listener({
+  violationListener({
     isTrusted: true,
     blockedURI,
     disposition: 'enforce',
@@ -113,10 +117,42 @@ describe('blocked-fonts', () => {
     await flush();
 
     expect(sendMessage).toHaveBeenCalledWith({
-      name: 'GetGoogleFontFile',
+      name: 'GetWebFontFile',
       url,
     });
     expect(readFontCache(url)).toBe(btoa('wOF2'));
     expect(added).toHaveLength(1);
+  });
+
+  it('handles a blocked NoBadFonts font file the same way', async () => {
+    const url =
+      'https://www.nobadfonts.in/font-file/a78af31f/rock-salt/rock-salt.woff2';
+
+    injectFontCss();
+    document.getElementById('stylebot-css-example.com')!.textContent =
+      FONT_CSS.replace(FONT_URL, url);
+
+    reportViolation(url);
+    await flush();
+
+    expect(sendMessage).toHaveBeenCalledWith({
+      name: 'GetWebFontFile',
+      url,
+    });
+    expect(readFontCache(url)).toBe(btoa('wOF2'));
+    expect(added).toHaveLength(1);
+  });
+
+  it('ignores a blocked file outside the web font providers', async () => {
+    const url = 'https://example.com/a.woff2';
+
+    injectFontCss();
+    document.getElementById('stylebot-css-example.com')!.textContent =
+      FONT_CSS.replace(FONT_URL, url);
+
+    reportViolation(url);
+    await flush();
+
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 });
