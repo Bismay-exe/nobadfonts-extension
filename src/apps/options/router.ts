@@ -6,9 +6,10 @@ import TheBasicsTab from './components/TheBasicsTab.vue';
 import TheStylesTab from './components/TheStylesTab.vue';
 import TheHistoryTab from './components/TheHistoryTab.vue';
 import TheSyncTab from './components/TheSyncTab.vue';
+import TheAccountTab from './components/TheAccountTab.vue';
 import TheStyleEditorPage from './components/styles/TheStyleEditorPage.vue';
 
-export const TABS = ['basics', 'styles', 'history', 'sync'] as const;
+export const TABS = ['basics', 'styles', 'history', 'sync', 'account'] as const;
 
 export type Tab = (typeof TABS)[number];
 
@@ -50,6 +51,12 @@ export const routes: Array<RouteConfig> = [
     name: 'sync',
     component: TheSyncTab,
     meta: { tab: 'sync' },
+  },
+  {
+    path: '/account',
+    name: 'account',
+    component: TheAccountTab,
+    meta: { tab: 'account' },
   },
   { path: '*', redirect: '/basics' },
 ];

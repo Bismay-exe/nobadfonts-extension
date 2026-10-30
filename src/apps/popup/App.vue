@@ -130,6 +130,10 @@
         />
       </div>
 
+      <div class="popup-divider" />
+
+      <account-row />
+
       <sync-stylebot v-if="syncEnabled" @synced="loadStyles" />
 
       <release-notification />
@@ -146,6 +150,7 @@ import { SHeading, SPillButton, SThemeProvider } from '@stylebot/components';
 
 import StyleComponent from './components/Style.vue';
 import SiteProfiles from './components/SiteProfiles.vue';
+import AccountRow from './components/AccountRow.vue';
 import CreateProfile from './components/CreateProfile.vue';
 import OptionsButton from './components/OptionsButton.vue';
 import Readability from './components/Readability.vue';
@@ -206,6 +211,7 @@ export default Vue.extend({
     OptionsButton,
     StyleComponent,
     SiteProfiles,
+    AccountRow,
     CreateProfile,
     ToggleStylebot,
     Readability,

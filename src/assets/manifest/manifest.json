@@ -74,7 +74,9 @@
   "host_permissions": [
     "https://drive.google.com/*",
     "https://www.googleapis.com/*",
-    "https://fonts.googleapis.com/*"
+    "https://fonts.googleapis.com/*",
+    "https://www.nobadfonts.in/*",
+    "https://wcegdxhvgwbeskaidlxr.supabase.co/*"
   ],
   "web_accessible_resources": [
     {

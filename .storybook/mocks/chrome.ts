@@ -11,6 +11,7 @@ import {
   defaultCommands,
   defaultReadabilitySettings,
 } from '@stylebot/settings';
+import type { AccountState } from '@stylebot/account';
 import type {
   Style,
   StylebotOptions,
@@ -24,9 +25,15 @@ import type {
   GalleryStyle,
   InstallGalleryPreviewResponse,
   ResetGalleryProfileResponse,
+  NoBadFontsFontsResponse,
+  NoBadFontsVariantsResponse,
 } from '@stylebot/types';
 
 import { isMac, toBrowserShortcut } from '@stylebot/utils';
+import {
+  NO_BAD_FONTS_CATALOG,
+  NO_BAD_FONTS_VARIANTS,
+} from '../fixtures/no-bad-fonts';
 
 /**
  * A response a story can leave unresolved, to show the surface still waiting.
@@ -51,6 +58,16 @@ export type ChromeShimOptions = {
   // Optional permissions already granted, and how the prompt answers a request.
   permissions?: { granted?: boolean; allowRequest?: boolean };
   gallery?: GalleryShimOptions;
+  noBadFonts?: NoBadFontsShimOptions;
+  // What the account row and tab read, and where signing out leaves them.
+  account?: AccountState;
+};
+
+export type NoBadFontsShimOptions = {
+  // The catalog rows the picker reads; null stands in for a failed request.
+  catalog?: Pending<NoBadFontsFontsResponse>;
+  // Every font's variant rows in one answer; null stands in for a failure.
+  variants?: Pending<NoBadFontsVariantsResponse>;
 };
 
 export type GalleryShimOptions = {
@@ -144,6 +161,7 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
 
   const gallery = { ...overrides.gallery };
   let previewing = gallery.previewing;
+  let account: AccountState = overrides.account ?? { status: 'signed-out' };
 
   const permissions = {
     granted: false,
@@ -265,6 +283,30 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
     },
 
     CreateProfile: () => ({ profileId: 'created' }),
+
+    GetNoBadFontsCatalog: () => {
+      const catalog =
+        overrides.noBadFonts?.catalog === undefined
+          ? NO_BAD_FONTS_CATALOG
+          : overrides.noBadFonts.catalog;
+
+      return catalog === 'pending' ? new Promise(() => undefined) : catalog;
+    },
+    GetNoBadFontsVariants: () => {
+      const variants =
+        overrides.noBadFonts?.variants === undefined
+          ? NO_BAD_FONTS_VARIANTS
+          : overrides.noBadFonts.variants;
+
+      return variants === 'pending' ? new Promise(() => undefined) : variants;
+    },
+
+    GetNoBadFontsAccount: () => account,
+    StartNoBadFontsSignIn: () => ({ opened: true }),
+    NoBadFontsSignOut: () => {
+      account = { status: 'signed-out' };
+      return { ok: true };
+    },
   };
 
   const tabResponses: Record<string, () => unknown> = {

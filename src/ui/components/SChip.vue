@@ -27,7 +27,7 @@ export default Vue.extend({
     },
 
     variant: {
-      type: String as PropType<'filled' | 'outline' | 'warning'>,
+      type: String as PropType<'filled' | 'outline' | 'warning' | 'danger'>,
       default: 'filled',
     },
 
@@ -72,7 +72,7 @@ export default Vue.extend({
     color: var(--text-secondary);
     cursor: pointer;
 
-    &:hover:not(.warning):not(:disabled) {
+    &:hover:not(.warning):not(.danger):not(:disabled) {
       color: var(--text-primary);
     }
 
@@ -93,6 +93,12 @@ export default Vue.extend({
     box-shadow: inset 0 0 0 1px var(--warning-border);
     color: var(--warning);
   }
+
+  &.danger {
+    background: var(--danger-background);
+    box-shadow: inset 0 0 0 1px var(--danger-border);
+    color: var(--danger);
+  }
 }
 
 .chip-label {
@@ -107,7 +113,8 @@ export default Vue.extend({
   display: inline-flex;
   color: var(--accent-text);
 
-  .warning & {
+  .warning &,
+  .danger & {
     color: inherit;
   }
 }

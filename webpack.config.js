@@ -42,6 +42,19 @@ const galleryDefinitions = {
   'process.env.STYLEBOT_GALLERY_SITE_URL': devOnly('STYLEBOT_GALLERY_SITE_URL'),
 };
 
+// The NoBadFonts account signs in through an OAuth client of the build's own:
+// production's comes from CI once it is registered, while a development build
+// can point at a local Supabase and a local client.
+const accountDefinitions = {
+  'process.env.NOBADFONTS_OAUTH_CLIENT_ID': JSON.stringify(
+    process.env.NOBADFONTS_OAUTH_CLIENT_ID ?? ''
+  ),
+  'process.env.NOBADFONTS_SUPABASE_URL': devOnly('NOBADFONTS_SUPABASE_URL'),
+  'process.env.NOBADFONTS_SUPABASE_ANON_KEY': devOnly(
+    'NOBADFONTS_SUPABASE_ANON_KEY'
+  ),
+};
+
 // Drive sign-in can't exchange codes or refresh tokens without it, so a
 // release built without it would ship with sign-in broken. CI builds only test.
 if (!process.env.STYLEBOT_GOOGLE_CLIENT_SECRET) {
@@ -243,6 +256,11 @@ const config = {
           transform: transformHtml,
         },
         {
+          from: 'apps/auth/index.html',
+          to: 'auth/index.html',
+          transform: transformHtml,
+        },
+        {
           from: 'apps/editor/window/index.html',
           to: 'editor-window/index.html',
           transform: transformHtml,
@@ -370,6 +388,7 @@ const backgroundPageConfig = {
       global: 'this',
       ...cliDefinitions,
       ...galleryDefinitions,
+      ...accountDefinitions,
       // Google sign-in's Desktop client secret, kept out of the repo.
       'process.env.STYLEBOT_GOOGLE_CLIENT_SECRET': JSON.stringify(
         process.env.STYLEBOT_GOOGLE_CLIENT_SECRET ?? ''
@@ -385,6 +404,7 @@ const clientConfig = {
     'editor/index': './apps/editor/content-script.ts',
     'editor/app': './apps/editor/app.ts',
     options: './apps/options/index.ts',
+    'auth/index': './apps/auth/index.ts',
     'google-sign-in/index': './apps/options/google-sign-in/index.ts',
     'editor-window/index': './apps/editor/window/index.ts',
     'inject-css/index': './apps/content/content-script.ts',
@@ -408,6 +428,7 @@ const clientConfig = {
       global: 'globalThis',
       ...cliDefinitions,
       ...galleryDefinitions,
+      ...accountDefinitions,
     }),
   ],
 };

@@ -38,6 +38,10 @@ export const Small = fromTemplate(
       .title
       <template #icon><arrow-up-right-icon :size="11" /></template>
     </s-chip>
+    <s-chip size="small" variant="danger" @click="() => {}">
+      Restricted
+      <template #icon><arrow-up-right-icon :size="11" /></template>
+    </s-chip>
     <s-chip size="small" variant="outline" @click="() => {}">div h1</s-chip>
     <s-chip size="small" variant="outline" @click="() => {}">
       .sb-page h1

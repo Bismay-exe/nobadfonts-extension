@@ -1,15 +1,8 @@
-import type {
-  GetGoogleFontFile,
-  GetGoogleFontFileResponse,
-} from '@stylebot/types';
+import type { GetWebFontFile, GetWebFontFileResponse } from '@stylebot/types';
 
-import {
-  getGoogleFontFileUrls,
-  readFontCache,
-  writeFontCache,
-} from './font-cache';
+import { isAllowedWebFontFileUrl, getWebFontFileUrls } from '@stylebot/utils';
 
-const GOOGLE_FONT_FILE = /^https:\/\/fonts\.gstatic\.com\//;
+import { readFontCache, writeFontCache } from './font-cache';
 
 const DESCRIPTORS: Record<string, string> = {
   style: 'font-style',
@@ -81,12 +74,12 @@ const loadBlockedFont = (url: string): void => {
     return;
   }
 
-  const message: GetGoogleFontFile = { name: 'GetGoogleFontFile', url };
+  const message: GetWebFontFile = { name: 'GetWebFontFile', url };
 
   // Promise chain rather than async, which would pull the ES5 async helpers
   // into every content script.
   chrome.runtime
-    .sendMessage<GetGoogleFontFile, GetGoogleFontFileResponse>(message)
+    .sendMessage<GetWebFontFile, GetWebFontFileResponse>(message)
     .catch(() => '')
     .then(data => {
       if (!data) {
@@ -105,7 +98,7 @@ const loadBlockedFont = (url: string): void => {
  * of waiting on the blocked request and a round trip to the background.
  */
 export const loadCachedFonts = (css: string): void => {
-  getGoogleFontFileUrls(css).forEach(url => {
+  getWebFontFileUrls(css).forEach(url => {
     const data = handledUrls.has(url) ? null : readFontCache(url);
     const rules = data ? getFontFaceRules(url) : [];
 
@@ -117,9 +110,9 @@ export const loadCachedFonts = (css: string): void => {
 };
 
 /**
- * Loads Google Fonts files the page's CSP blocks (e.g. `default-src 'self'`
- * on Hacker News) another way. Only blocked files are handled, so a page
- * still fetches just the unicode-range subsets it renders.
+ * Loads web font files the page's CSP blocks (e.g. `default-src 'self'` on
+ * Hacker News) another way. Only blocked files are handled, so a page still
+ * fetches just the unicode-range subsets it renders.
  */
 export const watchBlockedFonts = (): void => {
   if (watching) {
@@ -135,7 +128,7 @@ export const watchBlockedFonts = (): void => {
       !event.isTrusted ||
       event.disposition !== 'enforce' ||
       event.effectiveDirective !== 'font-src' ||
-      !GOOGLE_FONT_FILE.test(url) ||
+      !isAllowedWebFontFileUrl(url) ||
       handledUrls.has(url)
     ) {
       return;

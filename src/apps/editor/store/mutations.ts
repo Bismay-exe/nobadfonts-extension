@@ -115,6 +115,13 @@ export default {
     state.colorPickerVisible = colorPickerVisible;
   },
 
+  setNoBadFontsPickerVisible(
+    state: State,
+    noBadFontsPickerVisible: boolean
+  ): void {
+    state.noBadFontsPickerVisible = noBadFontsPickerVisible;
+  },
+
   setSelectors(state: State, root: postcss.Root): void {
     const selectors: Array<CssSelectorMetadata> = [];
     let index = 1;
