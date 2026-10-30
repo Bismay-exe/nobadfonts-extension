@@ -6,7 +6,7 @@
 // e2e/fixtures.ts, and runs --headed on a single worker so only one browser
 // window opens. Everything else is passed through to `playwright test`.
 
-import { bin, localBin, runOrExit } from './lib/cli.mjs';
+import { bin, runLocalOrExit, runOrExit } from './lib/cli.mjs';
 
 const USAGE = `usage: yarn e2e [--edge | --firefox] [--headed | --ui | --debug] [--no-build] [playwright test args]
 
@@ -40,11 +40,10 @@ if (args.includes('--firefox')) {
   browser = 'edge';
 }
 
-const run = (command, commandArgs) =>
-  runOrExit(command, commandArgs, { STYLEBOT_BROWSER: browser });
-
 if (!args.includes('--no-build')) {
-  run(bin('yarn'), [browser === 'firefox' ? 'build:firefox' : 'build']);
+  runOrExit(bin('yarn'), [browser === 'firefox' ? 'build:firefox' : 'build'], {
+    STYLEBOT_BROWSER: browser,
+  });
 }
 
 const playwrightArgs = args.filter(arg => !OWN_FLAGS.includes(arg));
@@ -54,4 +53,6 @@ if (args.includes('--headed')) {
   playwrightArgs.push('--workers=1');
 }
 
-run(localBin('playwright'), ['test', ...playwrightArgs]);
+runLocalOrExit('playwright', ['test', ...playwrightArgs], {
+  STYLEBOT_BROWSER: browser,
+});

@@ -6,12 +6,11 @@
 // it — every story is rendered and every play function's assertions run in
 // headless Chromium. Everything else is passed through to `test-storybook`.
 
-import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 import httpServer from 'http-server';
 
-import { bin, localBin, rootDir, runOrExit } from './lib/cli.mjs';
+import { bin, rootDir, runOrExit, spawnLocal } from './lib/cli.mjs';
 
 const USAGE = `usage: yarn test:storybook [--no-build | --dev] [test-storybook args]
 
@@ -90,7 +89,7 @@ const runnerArgs = [
 ];
 
 // Async so the event loop stays free to serve storybook-static meanwhile.
-const runner = spawn(localBin('test-storybook'), runnerArgs, {
+const runner = spawnLocal('test-storybook', runnerArgs, {
   stdio: 'inherit',
   cwd: rootDir,
 });
