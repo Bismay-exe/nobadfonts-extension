@@ -1,7 +1,4 @@
-import type {
-  GetWebFontFile,
-  GetWebFontFileResponse,
-} from '@stylebot/types';
+import type { GetWebFontFile, GetWebFontFileResponse } from '@stylebot/types';
 
 import { isAllowedWebFontFileUrl, getWebFontFileUrls } from '@stylebot/utils';
 

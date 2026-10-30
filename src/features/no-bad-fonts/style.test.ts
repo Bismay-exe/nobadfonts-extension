@@ -121,7 +121,9 @@ describe('buildNoBadFontsCss', () => {
     expect(css).toContain('font-weight: 600;');
     expect(css).toContain('font-style: italic;');
     expect(css).toContain('@font-face {');
-    expect(css).not.toContain('font-face {\n  font-family: "Aveltin Variable";\n  src: url("https://www.nobadfonts.in/font-file/font/test-sans/variants/Variable/test-sans.woff2") format("woff2");\n  font-weight');
+    expect(css).not.toContain(
+      'font-face {\n  font-family: "Aveltin Variable";\n  src: url("https://www.nobadfonts.in/font-file/font/test-sans/variants/Variable/test-sans.woff2") format("woff2");\n  font-weight'
+    );
   });
 
   it('adds a custom face under its own family alias', () => {

@@ -89,7 +89,11 @@
       </s-callout>
 
       <p v-else-if="!fonts.length" class="state">
-        {{ query || category ? t('no_bad_fonts_no_results') : t('no_bad_fonts_empty') }}
+        {{
+          query || category
+            ? t('no_bad_fonts_no_results')
+            : t('no_bad_fonts_empty')
+        }}
       </p>
 
       <template v-else>
@@ -107,11 +111,7 @@
           >
             <span class="font-heading">
               <span class="font-name">{{ font.name }}</span>
-              <s-chip
-                v-if="isRestricted(font)"
-                variant="danger"
-                size="small"
-              >
+              <s-chip v-if="isRestricted(font)" variant="danger" size="small">
                 {{ t('no_bad_fonts_restricted') }}
               </s-chip>
               <s-chip
@@ -125,7 +125,10 @@
 
             <span class="font-meta">
               <span v-if="font.designer">{{ font.designer }}</span>
-              <span v-if="font.designer && font.category" class="meta-separator">
+              <span
+                v-if="font.designer && font.category"
+                class="meta-separator"
+              >
                 ·
               </span>
               <span v-if="font.category">{{ font.category }}</span>
@@ -139,7 +142,10 @@
           </button>
 
           <div v-if="expanded === font.id" class="font-details">
-            <p v-if="isRestricted(font)" class="license-warning restricted-warning">
+            <p
+              v-if="isRestricted(font)"
+              class="license-warning restricted-warning"
+            >
               {{ t('no_bad_fonts_restricted_notice') }}
             </p>
             <p

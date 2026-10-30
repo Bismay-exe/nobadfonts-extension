@@ -6,7 +6,10 @@
     :disabled="!actionable"
     @click="onClick"
   >
-    <span class="account-avatar" :class="{ 'account-avatar--signed-in': signedIn }">
+    <span
+      class="account-avatar"
+      :class="{ 'account-avatar--signed-in': signedIn }"
+    >
       {{ initial }}
     </span>
 

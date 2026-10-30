@@ -193,4 +193,3 @@ export const renewSession = (
     user: session.user,
   };
 };
-

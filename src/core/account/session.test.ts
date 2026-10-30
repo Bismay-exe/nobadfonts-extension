@@ -159,9 +159,11 @@ describe('getAccount', () => {
     expect(String(fetchMock.mock.calls[0][0])).toBe(
       'https://project.supabase.co/auth/v1/oauth/token'
     );
-    expect(new URLSearchParams(String(fetchMock.mock.calls[0][1]?.body)).get('refresh_token')).toBe(
-      'refresh-token'
-    );
+    expect(
+      new URLSearchParams(String(fetchMock.mock.calls[0][1]?.body)).get(
+        'refresh_token'
+      )
+    ).toBe('refresh-token');
     expect(store.current()).toMatchObject({
       accessToken: 'new-access-token',
       refreshToken: 'rotated-token',
@@ -195,10 +197,9 @@ describe('getAccount', () => {
 
   it('clears the session when the server no longer honours the grant', async () => {
     const store = createStore(session({ expiresAt: NOW + 30_000 }));
-    fetchMock.mockResponseOnce(
-      JSON.stringify({ error: 'invalid_grant' }),
-      { status: 400 }
-    );
+    fetchMock.mockResponseOnce(JSON.stringify({ error: 'invalid_grant' }), {
+      status: 400,
+    });
 
     await expect(getAccount(deps(store))).resolves.toEqual({
       status: 'signed-out',
@@ -213,18 +214,14 @@ describe('signIn', () => {
     const launch = launchWith({ code: 'code-1' });
     fetchMock.mockResponseOnce(JSON.stringify(tokenReply()));
 
-    await expect(
-      signIn(deps(store, { launch }))
-    ).resolves.toMatchObject({
+    await expect(signIn(deps(store, { launch }))).resolves.toMatchObject({
       status: 'signed-in',
       user: { id: 'user-1', email: 'reader@example.com' },
       expiresAt: NOW + 3_600_000,
     });
 
     const authorizeUrl = new URL(String(launch.mock.calls[0][0]));
-    expect(authorizeUrl.searchParams.get('code_challenge_method')).toBe(
-      'S256'
-    );
+    expect(authorizeUrl.searchParams.get('code_challenge_method')).toBe('S256');
     expect(authorizeUrl.searchParams.get('code_challenge')).toHaveLength(43);
     expect(store.write).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -298,9 +295,9 @@ describe('signIn', () => {
   it('needs an OAuth client to sign in', async () => {
     const store = createStore();
 
-    await expect(
-      signIn(deps(store, { config: null }))
-    ).rejects.toMatchObject({ code: 'not-configured' });
+    await expect(signIn(deps(store, { config: null }))).rejects.toMatchObject({
+      code: 'not-configured',
+    });
   });
 
   it('needs a browser that can run the flow', async () => {

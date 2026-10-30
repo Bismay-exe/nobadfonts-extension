@@ -45,9 +45,7 @@ describe('NoBadFonts urls', () => {
       )
     ).toBe(false);
     expect(
-      isNoBadFontsCssUrl(
-        'https://www.nobadfonts.in/css/rock-salt?weights=450'
-      )
+      isNoBadFontsCssUrl('https://www.nobadfonts.in/css/rock-salt?weights=450')
     ).toBe(false);
     expect(
       isNoBadFontsCssUrl(
@@ -57,9 +55,9 @@ describe('NoBadFonts urls', () => {
   });
 
   it('recognises the site host but not lookalikes', () => {
-    expect(isNoBadFontsHostUrl('https://www.nobadfonts.in/fonts/rock-salt')).toBe(
-      true
-    );
+    expect(
+      isNoBadFontsHostUrl('https://www.nobadfonts.in/fonts/rock-salt')
+    ).toBe(true);
     expect(isNoBadFontsHostUrl('https://www.nobadfonts.in.evil.test/')).toBe(
       false
     );
@@ -137,9 +135,7 @@ describe('getNoBadFontsFontFile', () => {
 
   it('allows Google Fonts and NoBadFonts files only', () => {
     expect(
-      isAllowedWebFontFileUrl(
-        'https://fonts.gstatic.com/s/lobster/a.woff2'
-      )
+      isAllowedWebFontFileUrl('https://fonts.gstatic.com/s/lobster/a.woff2')
     ).toBe(true);
     expect(
       isAllowedWebFontFileUrl(

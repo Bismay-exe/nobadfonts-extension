@@ -1,7 +1,4 @@
-import type {
-  NoBadFontsFontRow,
-  NoBadFontsVariantRow,
-} from '@stylebot/types';
+import type { NoBadFontsFontRow, NoBadFontsVariantRow } from '@stylebot/types';
 
 export const ROCK_SALT_ID = 'b1069847-b7b3-4183-9288-4a9a2a3dc995';
 export const AVELTIN_ID = 'e34c1bd0-bd63-419c-8d83-3ff50481ecdc';
@@ -161,7 +158,9 @@ export const STATIC_VARIANT_ROWS: Array<NoBadFontsVariantRow> = [
     id: '09b1b5e1-92b5-4c69-94a8-0f5b0f6f5b48',
     font_id: VARIANT_FONT_ID,
     variant_name: 'Light',
-    woff2_url: storageUrl('font/test-sans/variants/Light/test-sans-light.woff2'),
+    woff2_url: storageUrl(
+      'font/test-sans/variants/Light/test-sans-light.woff2'
+    ),
     order_index: 1,
   },
 ];

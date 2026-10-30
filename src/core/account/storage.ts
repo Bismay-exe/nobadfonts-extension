@@ -12,7 +12,8 @@ const open = (): Promise<IDBDatabase> => {
     connection = new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(DATABASE_NAME, 1);
 
-      request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+      request.onupgradeneeded = () =>
+        request.result.createObjectStore(STORE_NAME);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     }).catch(error => {

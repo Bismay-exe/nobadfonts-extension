@@ -1182,10 +1182,7 @@ describe('actions', () => {
       });
 
       expect(mockDispatch).toBeCalledWith('clearNoBadFontsPreview');
-      expect(mockCommit).toBeCalledWith(
-        'setNoBadFontsPickerVisible',
-        false
-      );
+      expect(mockCommit).toBeCalledWith('setNoBadFontsPickerVisible', false);
     });
 
     it('previews the single face on the page without saving it', () => {
@@ -1215,10 +1212,7 @@ describe('actions', () => {
         css: 'picked',
         source: 'no-bad-fonts:h1:rock-salt',
       });
-      expect(mockDispatch).toHaveBeenNthCalledWith(
-        2,
-        'closeNoBadFontsPicker'
-      );
+      expect(mockDispatch).toHaveBeenNthCalledWith(2, 'closeNoBadFontsPicker');
     });
 
     it('applies nothing for a target the picker does not own', () => {

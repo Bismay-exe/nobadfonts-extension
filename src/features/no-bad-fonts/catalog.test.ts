@@ -52,9 +52,7 @@ describe('normalizeCatalog', () => {
     const thunder = fonts.find(font => font.slug === 'thunder')!;
 
     expect(thunder.license.redistribution).toBe('restricted');
-    expect(thunder.license.url).toBe(
-      'https://www.nobadfonts.in/fonts/thunder'
-    );
+    expect(thunder.license.url).toBe('https://www.nobadfonts.in/fonts/thunder');
   });
 
   it('drops unpublished, parent, invalid-slug, and duplicate rows', () => {

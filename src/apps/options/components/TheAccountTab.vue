@@ -60,7 +60,13 @@ import {
   requestSignOut,
   type AccountState,
 } from '@stylebot/account';
-import { SButton, SCallout, SCard, SHeading, SText } from '@stylebot/components';
+import {
+  SButton,
+  SCallout,
+  SCard,
+  SHeading,
+  SText,
+} from '@stylebot/components';
 import type { NoBadFontsAccountChanged } from '@stylebot/types';
 
 export default Vue.extend({

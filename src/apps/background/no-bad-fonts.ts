@@ -113,10 +113,7 @@ const fetchAllRows = async <T>(
   const rows: Array<T> = [];
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const result = await fetchPage(
-      urlForOffset(page * PAGE_SIZE),
-      isRow
-    );
+    const result = await fetchPage(urlForOffset(page * PAGE_SIZE), isRow);
 
     if (!result) {
       return null;
@@ -185,24 +182,25 @@ export const getNoBadFontsCatalog = (): Promise<NoBadFontsFontsResponse> => {
  * Reads every font's variants in one paginated request, remembering a
  * successful response for five minutes. A failed response is not cached.
  */
-export const getNoBadFontsVariants = (): Promise<NoBadFontsVariantsResponse> => {
-  const now = Date.now();
+export const getNoBadFontsVariants =
+  (): Promise<NoBadFontsVariantsResponse> => {
+    const now = Date.now();
 
-  if (variantsCache && now - variantsCache.at < CACHE_MS) {
-    return variantsCache.promise;
-  }
-
-  const promise = fetchAllRows(variantsUrl, isVariantRow);
-  variantsCache = { at: now, promise };
-
-  void promise.then(rows => {
-    if (!rows && variantsCache?.promise === promise) {
-      variantsCache = null;
+    if (variantsCache && now - variantsCache.at < CACHE_MS) {
+      return variantsCache.promise;
     }
-  });
 
-  return promise;
-};
+    const promise = fetchAllRows(variantsUrl, isVariantRow);
+    variantsCache = { at: now, promise };
+
+    void promise.then(rows => {
+      if (!rows && variantsCache?.promise === promise) {
+        variantsCache = null;
+      }
+    });
+
+    return promise;
+  };
 
 export const clearNoBadFontsCache = (): void => {
   catalogCache = null;
@@ -221,7 +219,8 @@ const FONT_FACE_DESCRIPTORS = new Set([
 ]);
 
 const FONT_WEIGHT = /^(normal|bold|[1-9]00)(\s+[1-9]00)?$/;
-const FONT_STYLE = /^(normal|italic|oblique(?:\s+-?\d+(?:deg|grad|rad|turn))?)$/;
+const FONT_STYLE =
+  /^(normal|italic|oblique(?:\s+-?\d+(?:deg|grad|rad|turn))?)$/;
 const FONT_DISPLAY = /^(auto|block|swap|fallback|optional)$/;
 const UNICODE_RANGE = /^[\sUu0-9A-Fa-f?,-]+$/;
 const SRC =

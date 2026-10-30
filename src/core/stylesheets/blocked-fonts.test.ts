@@ -39,7 +39,9 @@ const reportViolation = (blockedURI: string): void => {
 
     watchBlockedFonts();
 
-    violationListener = addEventListener.mock.calls[0][1] as (event: any) => void;
+    violationListener = addEventListener.mock.calls[0][1] as (
+      event: any
+    ) => void;
     addEventListener.mockRestore();
   }
 

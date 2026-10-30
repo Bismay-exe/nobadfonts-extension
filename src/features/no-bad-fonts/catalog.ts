@@ -7,10 +7,7 @@ import type {
 
 import { NoBadFontsRequestError } from './errors';
 
-export type NoBadFontsLicenseStatus =
-  | 'allowed'
-  | 'unverified'
-  | 'restricted';
+export type NoBadFontsLicenseStatus = 'allowed' | 'unverified' | 'restricted';
 
 export type NoBadFontsFont = {
   id: string;
@@ -37,7 +34,8 @@ const redistributionStatus = (
   return value === false ? 'restricted' : 'unverified';
 };
 
-const FONT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const FONT_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const hasUnsafeName = (name: string): boolean =>
@@ -45,10 +43,7 @@ const hasUnsafeName = (name: string): boolean =>
     const code = character.codePointAt(0) ?? 0;
 
     return (
-      code < 0x20 ||
-      code === 0x7f ||
-      character === '"' ||
-      character === '\\'
+      code < 0x20 || code === 0x7f || character === '"' || character === '\\'
     );
   });
 

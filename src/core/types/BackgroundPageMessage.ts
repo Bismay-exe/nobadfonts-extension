@@ -176,7 +176,6 @@ export type NoBadFontsAccountChanged = {
   name: 'NoBadFontsAccountChanged';
 };
 
-
 export type GetCompiledStyles = {
   name: 'GetCompiledStyles';
 };

@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue';
 import { expect, waitFor, within } from '@storybook/test';
 
-import {
-  clearCatalogCache,
-  clearVariantsCache,
-} from '@stylebot/no-bad-fonts';
+import { clearCatalogCache, clearVariantsCache } from '@stylebot/no-bad-fonts';
 import { editor, WITH_RULE } from '@stylebot/storybook/fixtures/editor';
 import {
   AVELTIN_ID,
@@ -43,9 +40,7 @@ const previewFamily = (fontId: string, variantId: string): string =>
   `"NoBadFonts Preview ${fontId} ${variantId}"`;
 
 const openPicker = async (canvas: Canvas): Promise<void> => {
-  await user.click(
-    canvas.getByRole('button', { name: 'Browse NoBadFonts' })
-  );
+  await user.click(canvas.getByRole('button', { name: 'Browse NoBadFonts' }));
   await canvas.findByRole('heading', { name: 'NoBadFonts' });
 };
 
@@ -81,9 +76,7 @@ export const CatalogAndLicenses: StoryObj = {
     const thunder = fontRow(canvas, 'Thunder');
 
     await expect(within(rockSalt).queryByText('Unverified license')).toBeNull();
-    await expect(
-      within(aveltin).getByText('Unverified license')
-    ).toBeVisible();
+    await expect(within(aveltin).getByText('Unverified license')).toBeVisible();
     await expect(within(thunder).getByText('Restricted')).toBeVisible();
     await expect(fontRow(canvas, 'Blank Face')).toBeVisible();
 
@@ -140,9 +133,7 @@ export const SearchAndApplyStatic: StoryObj = {
 
     const search = canvas.getByPlaceholderText('Search NoBadFonts');
     await user.type(search, 'zzz');
-    await expect(
-      canvas.getByText('No fonts match your search.')
-    ).toBeVisible();
+    await expect(canvas.getByText('No fonts match your search.')).toBeVisible();
     await expect(canvas.queryByText('Rock Salt')).toBeNull();
 
     await user.clear(search);
@@ -279,7 +270,9 @@ export const HeadingTarget: StoryObj = {
 
     await user.click(canvas.getByRole('button', { name: 'Selected element' }));
     const menu = await canvas.findByRole('menu');
-    await user.click(within(menu).getByRole('menuitem', { name: /^Heading 2/ }));
+    await user.click(
+      within(menu).getByRole('menuitem', { name: /^Heading 2/ })
+    );
 
     const row = await expand(canvas, 'Rock Salt');
     await within(row).findByRole('button', { name: /^Regular/ });
@@ -305,9 +298,7 @@ export const CatalogError: StoryObj = {
     const canvas = within(canvasElement);
     await openPicker(canvas);
 
-    await expect(
-      canvas.getByText("Couldn't load NoBadFonts.")
-    ).toBeVisible();
+    await expect(canvas.getByText("Couldn't load NoBadFonts.")).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Retry' })).toBeVisible();
   },
 };

@@ -54,20 +54,17 @@ const interceptNoBadFonts = async (
 ): Promise<Array<string>> => {
   const requests: Array<string> = [];
 
-  await context.route(
-    'https://wcegdxhvgwbeskaidlxr.supabase.co/**',
-    route => {
-      const url = route.request().url();
-      requests.push(url);
+  await context.route('https://wcegdxhvgwbeskaidlxr.supabase.co/**', route => {
+    const url = route.request().url();
+    requests.push(url);
 
-      return route.fulfill({
-        contentType: 'application/json',
-        body: JSON.stringify(
-          url.includes('/rest/v1/font_variants') ? VARIANTS : CATALOG
-        ),
-      });
-    }
-  );
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(
+        url.includes('/rest/v1/font_variants') ? VARIANTS : CATALOG
+      ),
+    });
+  });
 
   await context.route('https://www.nobadfonts.in/css/**', route => {
     requests.push(route.request().url());
@@ -101,19 +98,14 @@ test('applies a NoBadFonts family and keeps it after a reload', async ({
   await pickElement(page, editor, 'h1');
 
   await page.getByRole('button', { name: 'Browse NoBadFonts' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'NoBadFonts' })
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'NoBadFonts' })).toBeVisible();
 
   const row = page.locator('.font').filter({ hasText: FAMILY });
   await row.locator('.font-header').click();
   await row.getByRole('button', { name: /^Regular/ }).click();
   await page.getByRole('button', { name: 'Apply' }).click();
 
-  await expect(page.locator('h1')).toHaveCSS(
-    'font-family',
-    `"${FAMILY}"`
-  );
+  await expect(page.locator('h1')).toHaveCSS('font-family', `"${FAMILY}"`);
 
   expect(requests.some(url => url.includes('/rest/v1/fonts?'))).toBe(true);
   const variantRequest = requests.find(url =>
@@ -136,9 +128,7 @@ test('applies a NoBadFonts family and keeps it after a reload', async ({
       ].join('\n');
     });
 
-  await expect
-    .poll(savedCss)
-    .toContain('@font-face {');
+  await expect.poll(savedCss).toContain('@font-face {');
   await expect
     .poll(savedCss)
     .toContain(
@@ -150,8 +140,5 @@ test('applies a NoBadFonts family and keeps it after a reload', async ({
   expect(await savedCss()).not.toContain('/css/');
 
   await page.reload();
-  await expect(page.locator('h1')).toHaveCSS(
-    'font-family',
-    `"${FAMILY}"`
-  );
+  await expect(page.locator('h1')).toHaveCSS('font-family', `"${FAMILY}"`);
 });

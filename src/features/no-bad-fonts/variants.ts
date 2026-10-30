@@ -58,7 +58,8 @@ type ParsedVariantName =
   | { kind: 'variable' }
   | { kind: 'other' };
 
-const FONT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const FONT_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VARIABLE = /\bvariable\b/;
 const ITALIC = /\bitalic\b/;
 
@@ -80,9 +81,7 @@ const WEIGHTS: Record<string, number> = {
   black: 900,
 };
 
-let variantsRequest: Promise<
-  Map<string, NoBadFontsVariantSet>
-> | null = null;
+let variantsRequest: Promise<Map<string, NoBadFontsVariantSet>> | null = null;
 
 const normalizedName = (name: string): string =>
   name.trim().replace(/\s+/g, ' ');
@@ -120,9 +119,7 @@ export const parseVariantName = (rawName: string): ParsedVariantName => {
 
   const weight = WEIGHTS[base];
 
-  return weight
-    ? { kind: 'static', weight, style }
-    : { kind: 'other' };
+  return weight ? { kind: 'static', weight, style } : { kind: 'other' };
 };
 
 type VariantCandidate = {
@@ -132,11 +129,8 @@ type VariantCandidate = {
   parsed: ParsedVariantName;
 };
 
-const variantFile = (
-  row: NoBadFontsVariantRow
-): NoBadFontsFontFile | null =>
-  getNoBadFontsFontFile(row.woff2_url) ??
-  getNoBadFontsFontFile(row.woff_url);
+const variantFile = (row: NoBadFontsVariantRow): NoBadFontsFontFile | null =>
+  getNoBadFontsFontFile(row.woff2_url) ?? getNoBadFontsFontFile(row.woff_url);
 
 const unsupported = (
   name: string,
@@ -327,9 +321,7 @@ const requestVariants = async (): Promise<
  * is in flight or resolved. A failed request is dropped so Retry starts a
  * new one.
  */
-export const loadVariants = (): Promise<
-  Map<string, NoBadFontsVariantSet>
-> => {
+export const loadVariants = (): Promise<Map<string, NoBadFontsVariantSet>> => {
   if (!variantsRequest) {
     variantsRequest = requestVariants().catch(error => {
       variantsRequest = null;

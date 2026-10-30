@@ -100,10 +100,7 @@ import {
 
 import { get as getCommands } from './commands';
 
-import {
-  getNoBadFontsCatalog,
-  getNoBadFontsVariants,
-} from './no-bad-fonts';
+import { getNoBadFontsCatalog, getNoBadFontsVariants } from './no-bad-fonts';
 
 import {
   getAll as getAllRecentColors,

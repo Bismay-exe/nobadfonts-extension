@@ -101,7 +101,10 @@ export const getNoBadFontsFontFile = (
     const match = FONT_FILE_PATH.exec(url.pathname);
 
     return match
-      ? { url: url.toString(), format: match[2].toLowerCase() as 'woff2' | 'woff' }
+      ? {
+          url: url.toString(),
+          format: match[2].toLowerCase() as 'woff2' | 'woff',
+        }
       : null;
   }
 

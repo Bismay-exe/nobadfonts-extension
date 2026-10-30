@@ -237,10 +237,7 @@ describe('toSession', () => {
 
   it('refuses a reply without an access token', () => {
     expect(() =>
-      toSession(
-        { id_token: idToken({ sub: 'user-1' }) },
-        0
-      )
+      toSession({ id_token: idToken({ sub: 'user-1' }) }, 0)
     ).toThrow(AccountError);
   });
 

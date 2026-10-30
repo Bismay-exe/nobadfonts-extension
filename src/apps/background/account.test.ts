@@ -21,8 +21,7 @@ jest.mock('@stylebot/account', () => {
     getAccount: jest.fn(),
     signIn: jest.fn(),
     signOut: jest.fn(),
-    isAccountError: (error: unknown) =>
-      error instanceof AccountError,
+    isAccountError: (error: unknown) => error instanceof AccountError,
     AccountError,
   };
 });
@@ -74,11 +73,12 @@ beforeEach(() => {
   mockSignOut.mockReset();
 });
 
-const tabs = () => chrome.tabs as unknown as {
-  query: jest.Mock;
-  update: jest.Mock;
-  create: jest.Mock;
-};
+const tabs = () =>
+  chrome.tabs as unknown as {
+    query: jest.Mock;
+    update: jest.Mock;
+    create: jest.Mock;
+  };
 
 describe('isExtensionPage', () => {
   it('accepts the extension’s own pages', () => {
@@ -211,9 +211,11 @@ describe('NoBadFontsSignInReady', () => {
       reason: 'not-configured',
     });
     mockSignIn.mockRejectedValue(
-      new (jest.requireMock('@stylebot/account') as {
-        AccountError: new (code: string, message: string) => Error;
-      }).AccountError('not-configured', 'no client')
+      new (
+        jest.requireMock('@stylebot/account') as {
+          AccountError: new (code: string, message: string) => Error;
+        }
+      ).AccountError('not-configured', 'no client')
     );
     const sendResponse = jest.fn();
 

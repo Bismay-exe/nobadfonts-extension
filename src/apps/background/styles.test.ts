@@ -677,9 +677,9 @@ describe('getWebFontFile', () => {
   it('fetches nothing outside the web font providers', async () => {
     fetchMock.mockClear();
 
-    await expect(
-      getWebFontFile('https://example.com/a.woff2')
-    ).resolves.toBe('');
+    await expect(getWebFontFile('https://example.com/a.woff2')).resolves.toBe(
+      ''
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

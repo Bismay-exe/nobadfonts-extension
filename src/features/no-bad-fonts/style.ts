@@ -264,9 +264,7 @@ export const buildNoBadFontsCss = (
  * selected file, under an alias unique to the font and variant, so it never
  * waits on a stylesheet request or disturbs the saved font.
  */
-export const buildNoBadFontsPreviewCss = (
-  choice: NoBadFontsChoice
-): string => {
+export const buildNoBadFontsPreviewCss = (choice: NoBadFontsChoice): string => {
   const alias = `NoBadFonts Preview ${choice.font.id} ${choice.variant.id}`;
   const preview = fontFace(
     alias,

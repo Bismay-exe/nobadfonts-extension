@@ -52,7 +52,9 @@ describe('getNoBadFontsCatalog', () => {
 
     const url = requestUrl(0);
     expect(url.pathname).toBe('/rest/v1/fonts');
-    expect(url.searchParams.get('select')).toContain('license:taxonomy->license');
+    expect(url.searchParams.get('select')).toContain(
+      'license:taxonomy->license'
+    );
     expect(url.searchParams.get('is_published')).toBe('eq.true');
     expect(url.searchParams.get('family_role')).toBeNull();
     expect(url.searchParams.get('order')).toBe('name.asc,id.asc');
@@ -216,9 +218,7 @@ describe('sanitizeNoBadFontsCss', () => {
 
   it('drops a rule missing a family or src', () => {
     expect(
-      sanitizeNoBadFontsCss(
-        fontFace.replace(/font-family: 'Rock Salt';/, '')
-      )
+      sanitizeNoBadFontsCss(fontFace.replace(/font-family: 'Rock Salt';/, ''))
     ).toBe('');
     expect(sanitizeNoBadFontsCss(fontFace.replace(/src: [^;]+;/, ''))).toBe('');
   });
