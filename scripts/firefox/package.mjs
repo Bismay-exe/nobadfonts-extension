@@ -110,8 +110,14 @@ try {
   process.exit(1);
 }
 
-const extensionZip = path.join(outDir, `nobadfonts-${version}-firefox.zip`);
-const sourceZip = path.join(outDir, `nobadfonts-${version}-source.zip`);
+const extensionZip = path.join(
+  outDir,
+  `NoBadFonts-${version}-Firefox-Extension.zip`
+);
+const sourceZip = path.join(
+  outDir,
+  `NoBadFonts-${version}-Extension-Source.zip`
+);
 
 mkdirSync(outDir, { recursive: true });
 rmSync(extensionZip, { force: true });

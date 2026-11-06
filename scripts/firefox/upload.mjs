@@ -41,8 +41,14 @@ runUpload(async () => {
 
   const link = await uploadToFirefox(
     {
-      extensionZip: path.join(releaseDir, `nobadfonts-${version}-firefox.zip`),
-      sourceZip: path.join(releaseDir, `nobadfonts-${version}-source.zip`),
+      extensionZip: path.join(
+        releaseDir,
+        `NoBadFonts-${version}-Firefox-Extension.zip`
+      ),
+      sourceZip: path.join(
+        releaseDir,
+        `NoBadFonts-${version}-Extension-Source.zip`
+      ),
       releaseNotes,
     },
     flags.submit

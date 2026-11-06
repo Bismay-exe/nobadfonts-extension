@@ -60,14 +60,24 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ steps.version.outputs.version }}"
-          commit="$(git rev-parse --short HEAD)"
           yarn build
           mkdir -p release
-          (cd dist && zip -r -X -q "../release/nobadfonts-${version}-${commit}.zip" . -x .build-complete)
+          (cd dist && zip -r -X -q "../release/NoBadFonts-${version}-Chromium-Extension.zip" . -x .build-complete)
+
+      - name: Name packages
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          if [ -f "release/nobadfonts-${version}-firefox.zip" ]; then
+            mv "release/nobadfonts-${version}-firefox.zip" "release/NoBadFonts-${version}-Firefox-Extension.zip"
+          fi
+          if [ -f "release/nobadfonts-${version}-source.zip" ]; then
+            mv "release/nobadfonts-${version}-source.zip" "release/NoBadFonts-${version}-Extension-Source.zip"
+          fi
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: nobadfonts-${{ steps.version.outputs.version }}
+          name: NoBadFonts-${{ steps.version.outputs.version }}
           path: release/*.zip
           if-no-files-found: error

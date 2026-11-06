@@ -104,8 +104,10 @@ export const prepareUpload = envNames => {
  * uploading to the second store reuses the first one's.
  */
 export const packageChromium = version => {
-  const commit = git(['rev-parse', '--short', 'HEAD']);
-  const zipPath = path.join(releaseDir, `nobadfonts-${version}-${commit}.zip`);
+  const zipPath = path.join(
+    releaseDir,
+    `NoBadFonts-${version}-Chromium-Extension.zip`
+  );
 
   if (existsSync(zipPath)) {
     console.log(`Reusing ${path.relative(rootDir, zipPath)}`);
