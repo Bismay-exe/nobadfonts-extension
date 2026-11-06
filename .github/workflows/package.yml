@@ -1,0 +1,73 @@
+name: package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Tag to package, for example v1.0.0
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force origin
+
+      - name: Use Node from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Use cached node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: nodeModules-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            nodeModules-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Read version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      # The client id is the extension's public OAuth client, not a secret. A
+      # repository variable overrides the fallback.
+      - name: Package Firefox
+        env:
+          NOBADFONTS_OAUTH_CLIENT_ID: ${{ vars.NOBADFONTS_OAUTH_CLIENT_ID || '23e101c3-44ee-4749-b059-3c278d887053' }}
+        run: yarn package:firefox
+
+      - name: Package Chrome and Edge
+        env:
+          NOBADFONTS_OAUTH_CLIENT_ID: ${{ vars.NOBADFONTS_OAUTH_CLIENT_ID || '23e101c3-44ee-4749-b059-3c278d887053' }}
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          commit="$(git rev-parse --short HEAD)"
+          yarn build
+          mkdir -p release
+          (cd dist && zip -r -X -q "../release/nobadfonts-${version}-${commit}.zip" . -x .build-complete)
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nobadfonts-${{ steps.version.outputs.version }}
+          path: release/*.zip
+          if-no-files-found: error
