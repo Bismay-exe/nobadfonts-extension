@@ -355,7 +355,7 @@ test('the inspector hides its overlay while the pointer is off the page', async 
 type FreshInstall = {
   context: BrowserContext;
   extension: Extension;
-  // How often Stylebot asked to reload itself.
+  // How often NoBadFonts asked to reload itself.
   reloads: () => Promise<number>;
   // Reloads it through CDP, as it asked to, and waits for the new worker.
   reload: () => Promise<Extension>;

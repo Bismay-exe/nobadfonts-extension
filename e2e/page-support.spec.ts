@@ -89,7 +89,7 @@ for (const [kind, path] of [
   ['a PDF', '/report'],
   ['a JSON file', '/data'],
 ]) {
-  test(`says Stylebot can't style ${kind}, whatever its url`, async ({
+  test(`says NoBadFonts can't style ${kind}, whatever its url`, async ({
     context,
     engine,
     openPopup,

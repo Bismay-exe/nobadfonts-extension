@@ -30,7 +30,7 @@ test("a message the background doesn't answer leaves no error in the page when t
     errors.push(exceptionDetails.exception?.description ?? '')
   );
   session.on('Runtime.executionContextCreated', ({ context: created }) => {
-    if (created.name === 'Stylebot') {
+    if (created.name === 'NoBadFonts') {
       contentScriptContexts.push(created.id);
     }
   });
