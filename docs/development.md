@@ -1,6 +1,6 @@
 # Development
 
-Stylebot is built with Vue 2, TypeScript and webpack.
+NoBadFonts is built with Vue 2, TypeScript and webpack.
 
 ## Setup
 
@@ -11,7 +11,7 @@ Stylebot is built with Vue 2, TypeScript and webpack.
 
 - `src/` — extension source, grouped into tiers:
   - `apps/` — what the extension loads: the background worker, content script, popup, options page, editor and its pop-out window, reader, and code editor frame
-  - `features/` — capabilities the apps share, such as sync, style history, readability and the page bridge
+  - `features/` — capabilities the apps share, such as style history, readability and the page bridge
   - `ui/` — shared components, icons and styles
   - `core/` — the foundation: CSS parsing, saved styles, settings, i18n, shared types and utilities
   - `assets/` — the manifests, extension icons, bundled fonts and translations (`src/assets/_locales/`)
@@ -45,13 +45,9 @@ Run `yarn storybook` to browse the popup, options page, editor and shared compon
 - Run `yarn test:storybook` for the Storybook interaction tests (every story rendered headless, play functions asserted); `yarn test:storybook --dev --watch` against a running `yarn storybook` while writing them
 - Run `yarn e2e` for the Playwright end-to-end suite (headless Chrome, as in CI); `yarn e2e --firefox --ui` and friends for other browsers and modes — see [`docs/e2e.md`](e2e.md)
 
-## The website
+## Store screenshots
 
-The [stylebot.dev](https://stylebot.dev) site has its own repo, [stylebot-site](https://github.com/ankit/stylebot-site). Some of its screenshots are taken from this repo's build: `yarn capture:gallery`, `yarn capture:manual` and `yarn capture:store --phone` save them in `captures/` (or the directory after `--out`), to copy into the site's repo. The gallery's themes are the site's: `yarn capture:gallery` reads them from a stylebot-site checkout beside this repo, or the directory after `--themes`. Development builds also run the site bridge on `localhost`, so gallery installs work against the site's dev server.
-
-## Sync
-
-How sync works, and how to use it from a local build or a fork, is described in [`docs/sync.md`](sync.md).
+`yarn capture:store` builds the extension and retakes the screenshots in `store/screenshots/` headless. The capture themes live beside the script in `scripts/capture/`, so it needs no other checkout.
 
 ## Patches
 

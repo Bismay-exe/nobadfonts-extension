@@ -1,3 +1,5 @@
+require('./scripts/lib/load-env')();
+
 const fs = require('fs');
 const ejs = require('ejs');
 const path = require('path');
@@ -10,7 +12,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
-const { buildManifest, supportsCLI } = require('./scripts/lib/build-manifest');
+const { buildManifest } = require('./scripts/lib/build-manifest');
 const { parseLocaleConfig } = require('./scripts/lib/parse-locale-config');
 
 /**
@@ -26,22 +28,12 @@ const englishMessages = () =>
 const { SRC_DIR, packageDirs } = require('./scripts/lib/src-packages');
 
 const isPreview = process.env.STYLEBOT_PREVIEW === '1';
-const isCLISupported = supportsCLI(process.env.BROWSER);
-// Lets app code check for the CLI, and minifying drops it where it's false.
-const cliDefinitions = {
-  'process.env.STYLEBOT_CLI': JSON.stringify(String(isCLISupported)),
-};
-// A development build can point the styles gallery at another API, such as a
-// local Worker, and at another site, such as the gallery's dev server.
+// A development build can point the account at another API, such as a local
+// Supabase; a production build uses the defaults in core/account/config.
 const devOnly = name =>
   JSON.stringify(
     process.env.NODE_ENV === 'production' ? '' : process.env[name] ?? ''
   );
-const galleryDefinitions = {
-  'process.env.STYLEBOT_GALLERY_API_URL': devOnly('STYLEBOT_GALLERY_API_URL'),
-  'process.env.STYLEBOT_GALLERY_SITE_URL': devOnly('STYLEBOT_GALLERY_SITE_URL'),
-};
-
 // The NoBadFonts account signs in through an OAuth client of the build's own:
 // production's comes from CI once it is registered, while a development build
 // can point at a local Supabase and a local client.
@@ -53,13 +45,28 @@ const accountDefinitions = {
   'process.env.NOBADFONTS_SUPABASE_ANON_KEY': devOnly(
     'NOBADFONTS_SUPABASE_ANON_KEY'
   ),
+  // Set once each store listing exists, so the rating prompt opens its
+  // review page instead of a search page.
+  'process.env.NOBADFONTS_CHROME_REVIEW_URL': JSON.stringify(
+    process.env.NOBADFONTS_CHROME_REVIEW_URL ?? ''
+  ),
+  'process.env.NOBADFONTS_EDGE_REVIEW_URL': JSON.stringify(
+    process.env.NOBADFONTS_EDGE_REVIEW_URL ?? ''
+  ),
+  'process.env.NOBADFONTS_FIREFOX_REVIEW_URL': JSON.stringify(
+    process.env.NOBADFONTS_FIREFOX_REVIEW_URL ?? ''
+  ),
 };
 
-// Drive sign-in can't exchange codes or refresh tokens without it, so a
-// release built without it would ship with sign-in broken. CI builds only test.
-if (!process.env.STYLEBOT_GOOGLE_CLIENT_SECRET) {
+// A release without the registered public client would ship with sign-in and
+// every account feature unavailable. CI builds only test, so they may omit it.
+const OAUTH_CLIENT_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const oauthClientId = (process.env.NOBADFONTS_OAUTH_CLIENT_ID ?? '').trim();
+
+if (!OAUTH_CLIENT_ID_PATTERN.test(oauthClientId)) {
   const message =
-    'STYLEBOT_GOOGLE_CLIENT_SECRET is not set; Google Drive sign-in will fail in this build.';
+    "NOBADFONTS_OAUTH_CLIENT_ID must be set to the extension's public OAuth client UUID for a production build.";
 
   if (process.env.NODE_ENV === 'production' && !process.env.CI) {
     throw new Error(message);
@@ -251,11 +258,6 @@ const config = {
           transform: transformHtml,
         },
         {
-          from: 'apps/options/google-sign-in/index.html',
-          to: 'google-sign-in/index.html',
-          transform: transformHtml,
-        },
-        {
           from: 'apps/auth/index.html',
           to: 'auth/index.html',
           transform: transformHtml,
@@ -386,13 +388,7 @@ const backgroundPageConfig = {
     new WriteBuildMarkerPlugin('background'),
     new webpack.DefinePlugin({
       global: 'this',
-      ...cliDefinitions,
-      ...galleryDefinitions,
       ...accountDefinitions,
-      // Google sign-in's Desktop client secret, kept out of the repo.
-      'process.env.STYLEBOT_GOOGLE_CLIENT_SECRET': JSON.stringify(
-        process.env.STYLEBOT_GOOGLE_CLIENT_SECRET ?? ''
-      ),
     }),
   ],
 };
@@ -405,19 +401,12 @@ const clientConfig = {
     'editor/app': './apps/editor/app.ts',
     options: './apps/options/index.ts',
     'auth/index': './apps/auth/index.ts',
-    'google-sign-in/index': './apps/options/google-sign-in/index.ts',
     'editor-window/index': './apps/editor/window/index.ts',
     'inject-css/index': './apps/content/content-script.ts',
-    'site-bridge/index': './apps/site-bridge/content-script.ts',
-    'gallery-preview/index': './apps/gallery-preview/index.ts',
     'monaco-editor/iframe/index': './apps/monaco-iframe/index.ts',
     'monaco-editor/iframe/options-index':
       './apps/monaco-iframe/options-index.ts',
     'readability/reader': './apps/reader/reader.ts',
-    // The CLI's page inspector, loaded on demand.
-    ...(isCLISupported && {
-      'cli-inspector/index': './apps/cli-inspector/index.ts',
-    }),
   },
   // Webpack's `global` shim falls back to `new Function` in the bundles loaded
   // with import(), which a strict page CSP blocks and reports as an issue.
@@ -426,8 +415,6 @@ const clientConfig = {
     ...config.plugins,
     new webpack.DefinePlugin({
       global: 'globalThis',
-      ...cliDefinitions,
-      ...galleryDefinitions,
       ...accountDefinitions,
     }),
   ],

@@ -14,34 +14,14 @@ import { fileURLToPath } from 'node:url';
 import { getAll, request } from './app-store-connect.mjs';
 
 const BUNDLE_ID = 'dev.stylebot.Stylebot';
-const SITE = 'https://stylebot.dev';
-const SUPPORT_URL = 'https://github.com/ankit/stylebot/issues';
+const SITE = 'https://www.nobadfonts.in';
+const SUPPORT_URL = 'https://github.com/Bismay-exe/nobadfonts-extension/issues';
 const EDITABLE_STATES = [
   'PREPARE_FOR_SUBMISSION',
   'DEVELOPER_REJECTED',
   'REJECTED',
   'METADATA_REJECTED',
 ];
-
-// stylebot.dev's path prefix for each App Store Connect locale.
-const SITE_LOCALES = {
-  'en-US': '',
-  'en-GB': '',
-  'de-DE': 'de/',
-  'es-ES': 'es/',
-  'fr-FR': 'fr/',
-  id: 'id/',
-  it: 'it/',
-  ja: 'ja/',
-  ko: 'ko/',
-  'pt-BR': 'pt-br/',
-  'pt-PT': 'pt-pt/',
-  ro: 'ro/',
-  ru: 'ru/',
-  vi: 'vi/',
-  'zh-Hans': 'zh-cn/',
-  'zh-Hant': 'zh-tw/',
-};
 
 const rootDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -137,7 +117,6 @@ const updateLocalizations = async (appInfoId, versionId) => {
 
   for (const locale of locales) {
     const listing = readListing(locale);
-    const sitePrefix = SITE_LOCALES[locale] ?? '';
 
     await upsert(
       infoByLocale[locale],
@@ -146,7 +125,7 @@ const updateLocalizations = async (appInfoId, versionId) => {
         ...(!infoByLocale[locale] && { locale }),
         name: listing.name,
         subtitle: listing.subtitle,
-        privacyPolicyUrl: `${SITE}/${sitePrefix}privacy/`,
+        privacyPolicyUrl: `${SITE}/legal/privacy/`,
       },
       { appInfo: { data: { type: 'appInfos', id: appInfoId } } }
     );
@@ -164,7 +143,7 @@ const updateLocalizations = async (appInfoId, versionId) => {
         description: listing.description,
         keywords: listing.keywords,
         supportUrl: SUPPORT_URL,
-        marketingUrl: `${SITE}/${sitePrefix}`,
+        marketingUrl: SITE,
       },
       { appStoreVersion: { data: { type: 'appStoreVersions', id: versionId } } }
     );

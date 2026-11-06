@@ -9,14 +9,6 @@
       <options-icon />
       {{ t('view_options') }}
     </button>
-    <button class="item" @click="reportIssue">
-      <flag-icon />
-      {{ t('report_an_issue') }}
-    </button>
-    <button class="item" @click="donate">
-      <coffee-icon />
-      {{ t('donate') }}
-    </button>
   </s-menu>
 </template>
 
@@ -24,19 +16,10 @@
 import Vue from 'vue';
 
 import { shortcutStore } from './shortcut-store';
-import {
-  openOptionsPage,
-  openReportIssuePage,
-  openDonatePage,
-} from '@stylebot/utils';
+import { openOptionsPage } from '@stylebot/utils';
 
 import { SMenu, SShortcutChip } from '@stylebot/components';
-import {
-  OptionsIcon,
-  FlagIcon,
-  CoffeeIcon,
-  KeyboardIcon,
-} from '@stylebot/icons';
+import { OptionsIcon, KeyboardIcon } from '@stylebot/icons';
 
 export default Vue.extend({
   name: 'MoreMenu',
@@ -45,8 +28,6 @@ export default Vue.extend({
     SMenu,
     SShortcutChip,
     OptionsIcon,
-    FlagIcon,
-    CoffeeIcon,
     KeyboardIcon,
   },
 
@@ -66,16 +47,6 @@ export default Vue.extend({
     openOptions(): void {
       this.$emit('close');
       openOptionsPage();
-    },
-
-    reportIssue(): void {
-      this.$emit('close');
-      openReportIssuePage();
-    },
-
-    donate(): void {
-      this.$emit('close');
-      openDonatePage();
     },
 
     openShortcut(): void {

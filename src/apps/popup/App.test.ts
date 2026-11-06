@@ -5,7 +5,6 @@ import OptionsButton from './components/OptionsButton.vue';
 import SiteProfiles from './components/SiteProfiles.vue';
 import StyleComponent from './components/Style.vue';
 import ToggleStylebot from './components/ToggleStylebot.vue';
-import SyncStylebot from './components/SyncStylebot.vue';
 import UnsupportedPage from './components/UnsupportedPage.vue';
 import {
   getCurrentTab,
@@ -14,7 +13,6 @@ import {
   getRestoredPageSupport,
 } from './utils';
 import type { PageSupport } from '@stylebot/utils';
-import { getGoogleDriveSyncEnabled } from '../../features/sync/google-drive/sync-metadata';
 
 jest.mock('./utils', () => ({
   getCurrentTab: jest.fn(),
@@ -27,14 +25,7 @@ jest.mock('./utils', () => ({
   getPublishMenuItem: jest.fn(async () => null),
 }));
 
-jest.mock('../../features/sync/google-drive/sync-metadata', () => ({
-  getGoogleDriveSyncEnabled: jest.fn(),
-}));
-
 const flush = () => new Promise(resolve => setTimeout(resolve));
-
-const syncStatus = (enabled: boolean) =>
-  (getGoogleDriveSyncEnabled as jest.Mock).mockResolvedValue(enabled);
 
 /**
  * Opens the popup on a tab at `url` whose page script gives `support`, and
@@ -54,7 +45,6 @@ const openPopup = async (url: string, support: PageSupport = 'supported') => {
 describe('App.vue', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    syncStatus(false);
   });
 
   it('should show the restricted view for a browser page', async () => {
@@ -103,29 +93,6 @@ describe('App.vue', () => {
     await openPopup('https://news.ycombinator.com');
 
     expect(getCommands).toHaveBeenCalled();
-  });
-
-  it('should show the sync strip while sync is on', async () => {
-    syncStatus(true);
-    const wrapper = await openPopup('https://news.ycombinator.com');
-
-    expect(wrapper.findComponent(SyncStylebot).exists()).toBe(true);
-  });
-
-  it('should hide the sync strip while sync is off', async () => {
-    syncStatus(false);
-    const wrapper = await openPopup('https://news.ycombinator.com');
-
-    expect(wrapper.findComponent(SyncStylebot).exists()).toBe(false);
-  });
-
-  it('should reload the styles once a sync lands', async () => {
-    syncStatus(true);
-    const wrapper = await openPopup('https://news.ycombinator.com');
-
-    wrapper.findComponent(SyncStylebot).vm.$emit('synced');
-
-    expect(getStyles).toHaveBeenCalledTimes(2);
   });
 
   it('should list every matching style as a row, the most specific first, whatever its save order', async () => {

@@ -2,11 +2,7 @@ import crypto from 'crypto';
 
 import { buildManifest } from '../../../scripts/lib/build-manifest';
 
-const GOOGLE_HOSTS = [
-  'https://drive.google.com/*',
-  'https://www.googleapis.com/*',
-  'https://fonts.googleapis.com/*',
-];
+const GOOGLE_FONTS_HOST = 'https://fonts.googleapis.com/*';
 
 // The NoBadFonts catalog is read from its Supabase project, and its CSS and
 // font files from the site itself.
@@ -15,12 +11,7 @@ const NO_BAD_FONTS_HOSTS = [
   'https://wcegdxhvgwbeskaidlxr.supabase.co/*',
 ];
 
-// The stylebot.dev bridge is covered by <all_urls>, so it adds no warning.
-const CONTENT_SCRIPT_MATCHES = [
-  ['<all_urls>'],
-  ['<all_urls>'],
-  ['https://stylebot.dev/*', 'https://gallery.stylebot.dev/*'],
-];
+const CONTENT_SCRIPT_MATCHES = [['<all_urls>'], ['<all_urls>']];
 
 const RELEASE_INSTALL_WARNING_FIELDS = {
   chrome: {
@@ -30,8 +21,6 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       'identity',
       'contextMenus',
       'unlimitedStorage',
-      'alarms',
-      'idle',
       // Covered by the warning tabs already shows, so it adds none.
       'favicon',
       // No warning of its own, and <all_urls> below adds none either, since
@@ -42,7 +31,7 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       // to hosts <all_urls> already covers.
       'declarativeNetRequestWithHostAccess',
     ],
-    host_permissions: [...GOOGLE_HOSTS, ...NO_BAD_FONTS_HOSTS, '<all_urls>'],
+    host_permissions: [GOOGLE_FONTS_HOST, ...NO_BAD_FONTS_HOSTS, '<all_urls>'],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
   firefox: {
@@ -52,10 +41,8 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       'identity',
       'contextMenus',
       'unlimitedStorage',
-      'alarms',
-      'idle',
     ],
-    host_permissions: [...GOOGLE_HOSTS, ...NO_BAD_FONTS_HOSTS],
+    host_permissions: [GOOGLE_FONTS_HOST, ...NO_BAD_FONTS_HOSTS],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
   safari: {
@@ -64,16 +51,9 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       'storage',
       'contextMenus',
       'unlimitedStorage',
-      'alarms',
-      'idle',
       'declarativeNetRequestWithHostAccess',
     ],
-    host_permissions: [
-      ...GOOGLE_HOSTS,
-      ...NO_BAD_FONTS_HOSTS,
-      'https://oauth2.googleapis.com/*',
-      'http://127.0.0.1/*',
-    ],
+    host_permissions: [GOOGLE_FONTS_HOST, ...NO_BAD_FONTS_HOSTS],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
 };
@@ -159,31 +139,23 @@ describe('optional permissions', () => {
   );
 });
 
-describe('CLI permissions', () => {
+describe('removed CLI permission', () => {
   it.each([
-    ['release', 'production', false],
-    ['preview', 'production', true],
-    ['development', 'development', false],
-  ])('are only optional in the %s Chrome manifest', (_, nodeEnv, preview) => {
+    ['Chrome', undefined],
+    ['Firefox', 'firefox'],
+    ['Safari', 'safari'],
+  ] as const)('is absent from the %s manifest', (_, browser) => {
     const manifest = buildManifest({
-      browser: undefined,
-      nodeEnv,
-      preview,
+      browser,
+      nodeEnv: 'production',
+      preview: false,
     });
 
     expect(manifest.permissions).not.toContain('nativeMessaging');
-    expect(manifest.optional_permissions).toContain('nativeMessaging');
+    expect(manifest.optional_permissions ?? []).not.toContain(
+      'nativeMessaging'
+    );
   });
-
-  it.each(['firefox', 'safari'] as const)(
-    'are left out of the %s manifest',
-    browser => {
-      const manifest = releaseManifest(browser);
-
-      expect(manifest).not.toHaveProperty('optional_permissions');
-      expect(manifest).not.toHaveProperty('optional_host_permissions');
-    }
-  );
 });
 
 /**
@@ -202,15 +174,33 @@ const extensionId = (key: string) =>
 
 describe('store key', () => {
   it.each([
-    ['Chrome', undefined, 'oiaejidbmkiecgbjeifoejpgmdaleoha'],
-    ['Edge', 'edge', 'mjolbpfednnbebfapicajpifliopnnai'],
-  ])('gives the %s preview build its store id', (_, store, id) => {
+    ['Chrome', undefined],
+    ['Edge', 'edge'],
+  ])('gives the %s preview build the NoBadFonts development id', (_, store) => {
     const manifest = buildManifest({
       nodeEnv: 'production',
       preview: true,
       store,
     });
 
-    expect(extensionId(manifest.key as string)).toBe(id);
+    expect(extensionId(manifest.key as string)).toBe(
+      'ccnipcpngemmggbkipemelphadkkkfgk'
+    );
+  });
+});
+
+describe('Firefox identity', () => {
+  const addonId = 'nobadfonts@nobadfonts.in';
+
+  it('uses the permanent NoBadFonts add-on id', () => {
+    expect(releaseManifest('firefox')).toMatchObject({
+      browser_specific_settings: { gecko: { id: addonId } },
+    });
+  });
+
+  it('derives the loopback hash Firefox uses for the redirect', () => {
+    expect(crypto.createHash('sha1').update(addonId).digest('hex')).toBe(
+      '9a30e7adef8fda1f39d1c414feb6315225c648d3'
+    );
   });
 });

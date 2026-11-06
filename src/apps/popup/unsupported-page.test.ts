@@ -15,7 +15,7 @@ describe('describeUnsupportedPage', () => {
   ])('names %s as a browser page', (url, key, browser) => {
     expect(describeUnsupportedPage(url, 'unreachable')).toEqual({
       name: { key, browser },
-      reason: { key: 'stylebot_cant_style_browser_pages' },
+      reason: { key: 'nobadfonts_cant_style_browser_pages' },
       needsFileAccess: false,
     });
   });
@@ -72,7 +72,7 @@ describe('describeUnsupportedPage', () => {
       describeUnsupportedPage('https://example.com/report.pdf', 'unsupported')
     ).toEqual({
       name: null,
-      reason: { key: 'stylebot_cant_style_this_page' },
+      reason: { key: 'nobadfonts_cant_style_this_page' },
       needsFileAccess: false,
     });
   });

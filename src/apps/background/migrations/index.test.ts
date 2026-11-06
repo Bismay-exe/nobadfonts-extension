@@ -4,7 +4,6 @@ jest.mock('./styles-metadata-update', () => jest.fn(async () => undefined));
 jest.mock('./styles-modified-time-update', () =>
   jest.fn(async () => undefined)
 );
-jest.mock('./sync-storage-update', () => jest.fn(async () => undefined));
 jest.mock('./chat-removal', () => jest.fn(async () => undefined));
 
 import { MIGRATION_ERRORS_KEY, completionKey } from './index';
@@ -98,7 +97,6 @@ describe('runMigrations', () => {
     expect(set).toBeCalledWith({
       [completionKey('default-shortcut-update')]: true,
       [completionKey('commands-to-browser')]: true,
-      [completionKey('sync-storage-update')]: true,
     });
   });
 

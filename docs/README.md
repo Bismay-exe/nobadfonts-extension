@@ -1,16 +1,14 @@
-# Stylebot docs
+# NoBadFonts docs
 
 ## Contributing
 
 - [Development](development.md) — setup, dev builds, lint, tests
 - [Releases](releases.md) — cutting a release
 - [Translation](translation.md) — adding or improving a locale
-- [CLI](cli.md) — driving a dev build from the command line or a coding agent
 
 ## Testing
 
 - [e2e](e2e.md) — the Playwright suite against the real extension
-- [Styling evals](styling-evals.md) — measuring whether a change makes Claude restyle pages better through the CLI
 
 ## Architecture
 
@@ -21,5 +19,4 @@
 - [NoBadFonts](no-bad-fonts.md) — the typography picker's catalog, license rules and host permissions
 - [NoBadFonts account](account.md) — the OAuth sign-in, where the tokens live, and how a grant is revoked
 - [Readability](readability.md) — the reader view and how it loads
-- [Profiles](profiles.md) — several named stylesheets per site, how they're stored, saved and synced
-- [Sync](sync.md) — Google Drive sync and its three-way merge
+- [Profiles](profiles.md) — several named stylesheets per site, how they're stored and saved

@@ -17,7 +17,6 @@ export {
   getStableClassPartsSelector,
   getStableClassMatcher,
   getStableSelector,
-  getFragileSelector,
   getIdBasedSelector,
   getClassBasedSelector,
   getTagNameBasedSelector,

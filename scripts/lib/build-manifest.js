@@ -7,6 +7,9 @@ const MANIFEST_DIR = path.resolve(__dirname, '../../src/assets/manifest');
 const CHROME = 'chrome';
 
 // Each store's public key, by STYLEBOT_STORE (unset for the Chrome Web Store).
+// Both currently hold the temporary NoBadFonts development key: it fixes the
+// local extension id, and therefore the OAuth redirect, before either listing
+// exists. Replace each with its store's key after the first upload.
 const STORE_KEY_FILES = {
   chrome: 'manifest-dev.json',
   edge: 'manifest-edge-dev.json',
@@ -27,17 +30,6 @@ const loadManifestModule = name => {
   }
 
   return require(path.join(MANIFEST_DIR, `${name}.js`));
-};
-
-/**
- * Whether the build for a browser (a BROWSER value, undefined for Chrome and
- * Edge) carries the CLI, which its manifest asks for the native host for.
- */
-const supportsCLI = browser => {
-  const manifest = loadManifestModule(browser ?? CHROME);
-  const optionalPermissions = manifest.optional_permissions ?? [];
-
-  return optionalPermissions.includes('nativeMessaging');
 };
 
 /**
@@ -63,4 +55,4 @@ const buildManifest = ({ browser, nodeEnv, preview, store }) => {
   return manifest;
 };
 
-module.exports = { buildManifest, supportsCLI };
+module.exports = { buildManifest };

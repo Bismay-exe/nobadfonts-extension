@@ -4,7 +4,7 @@ import path from 'node:path';
 import { rootDir } from '../lib/cli.mjs';
 
 /**
- * Where screenshots of the stylebot.dev site go by default, git-ignored, for
+ * Where screenshots of the NoBadFonts site go by default, git-ignored, for
  * copying into the site's repo.
  */
 export const capturesDir = name => path.join(rootDir, 'captures', name);

@@ -4,18 +4,16 @@ import { getSiteUrl } from './site-url';
 export const getExtensionVersion = (): string =>
   chrome.runtime.getManifest().version;
 
-// e.g. "3.1.4" -> "3.1", matching how releases are grouped on stylebot.dev.
+// e.g. "3.1.4" -> "3.1", matching how releases are grouped.
 export const getReleaseVersion = (): string =>
   getExtensionVersion().split('.').slice(0, 2).join('.');
 
 export const getReleaseNotificationId = (): NotificationId =>
   `release/${getReleaseVersion()}`;
 
-export const getReleaseUrl = (): string =>
-  getSiteUrl(`/releases/${getReleaseVersion()}`);
+export const getReleaseUrl = (): string => getSiteUrl('/docs');
 
-export const getGoodbyeUrl = (): string =>
-  getSiteUrl(`/goodbye?version=${getExtensionVersion()}`);
+export const getGoodbyeUrl = (): string => getSiteUrl('/');
 
 const getMajorVersion = (version?: string): number | undefined => {
   const match = /^(\d+)(\.\d+)*$/.exec(version?.trim() ?? '');

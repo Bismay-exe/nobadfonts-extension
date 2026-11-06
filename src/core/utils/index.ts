@@ -23,6 +23,7 @@ export {
 export { KEYBOARD_FOCUS, isFieldTarget, consumeFieldEscape } from './focus';
 
 export { getCurrentTimestamp } from './timestamp';
+export { hashCss } from './hash-css';
 
 export { getNotification, setNotification } from './notification';
 export { INSTALL_TIME_KEY, recordInstallTime } from './install-time';
@@ -39,7 +40,6 @@ export {
   openOptionsPage,
   openShortcutsPage,
   openReportIssuePage,
-  openDonatePage,
 } from './open-page';
 export { tryPermissionsCall } from './permissions';
 export {

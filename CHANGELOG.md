@@ -1,3 +1,16 @@
+## Version 1.0.0 (November 2026)
+
+NoBadFonts 1.0 is the first release under its own name and identity, based on Stylebot 4.0.5.
+
+- Renamed the extension, manifests, packages, icons and store listings to NoBadFonts
+- Added a font library for browsing and applying licensed typefaces, plus the typography picker
+- Added NoBadFonts account sign-in through the website, with token storage and revocation in the options page
+- Removed the gallery, Google Drive sync and Google sign-in
+- Removed the command line tool and native messaging host
+- Removed the website bridge
+- Replaced the Sync tab with Backup: export and import styles as JSON
+- Updated the privacy policy, support links and legal pages for the new account model
+
 ## Version 4.0.5 (October 2026)
 
 - Fix Vivaldi opening the side panel on its own after installing or updating Stylebot

@@ -37,17 +37,17 @@ describe('getReviewUrl', () => {
     {
       browser: 'Chrome',
       ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36',
-      url: 'https://chromewebstore.google.com/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha/reviews',
+      url: 'https://chromewebstore.google.com/search/NoBadFonts',
     },
     {
       browser: 'Edge',
       ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0',
-      url: 'https://microsoftedge.microsoft.com/addons/detail/stylebot/mjolbpfednnbebfapicajpifliopnnai',
+      url: 'https://microsoftedge.microsoft.com/addons/search/NoBadFonts',
     },
     {
       browser: 'Firefox',
       ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0',
-      url: 'https://addons.mozilla.org/firefox/addon/stylebot-web/reviews/',
+      url: 'https://addons.mozilla.org/firefox/search/?q=NoBadFonts',
     },
     {
       browser: 'Safari',

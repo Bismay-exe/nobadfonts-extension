@@ -128,6 +128,7 @@ describe('exchangeCode', () => {
     ).rejects.toMatchObject({
       code: 'exchange-failed',
       message: 'HTTP 502',
+      httpStatus: 502,
     });
   });
 
@@ -149,6 +150,28 @@ describe('exchangeCode', () => {
     ).rejects.toMatchObject({
       code: 'exchange-failed',
       message: 'Refresh token revoked',
+      oauthError: 'invalid_grant',
+      httpStatus: 400,
+    });
+  });
+
+  it('keeps the HTTP status when a server error has no OAuth code', async () => {
+    fetchMock.mockResponseOnce(
+      JSON.stringify({ message: 'upstream unavailable' }),
+      { status: 503 }
+    );
+
+    await expect(
+      exchangeCode(config, {
+        code: 'code-1',
+        verifier: 'verifier-1',
+        redirectUri: REDIRECT_URI,
+      })
+    ).rejects.toMatchObject({
+      code: 'exchange-failed',
+      message: 'HTTP 503',
+      oauthError: undefined,
+      httpStatus: 503,
     });
   });
 });

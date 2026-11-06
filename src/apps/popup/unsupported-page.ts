@@ -88,13 +88,16 @@ export const describeUnsupportedPage = (
     const browser = BROWSER_SCHEMES[scheme];
     const key = BROWSER_PAGE_NAMES[browserPage(url, scheme)] ?? 'browser_page';
 
-    return page({ key, browser }, { key: 'stylebot_cant_style_browser_pages' });
+    return page(
+      { key, browser },
+      { key: 'nobadfonts_cant_style_browser_pages' }
+    );
   }
 
   if (EXTENSION_SCHEMES.some(prefix => url.startsWith(prefix))) {
     return page(
       { key: 'extension_page' },
-      { key: 'stylebot_cant_style_extension_pages' }
+      { key: 'nobadfonts_cant_style_extension_pages' }
     );
   }
 
@@ -123,12 +126,12 @@ export const describeUnsupportedPage = (
       key:
         support === 'unreachable'
           ? 'reload_this_page_to_style_it'
-          : 'stylebot_cant_style_this_page',
+          : 'nobadfonts_cant_style_this_page',
     });
   }
 
   return page(
     { key: 'browser_page' },
-    { key: 'stylebot_cant_style_this_page' }
+    { key: 'nobadfonts_cant_style_this_page' }
   );
 };

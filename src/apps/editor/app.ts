@@ -4,7 +4,6 @@ import { createCommandHandler } from './handlers/command';
 import { createContextMenuHandler } from './handlers/context-menu';
 import { createEditorWindowHandler } from './handlers/editor-window';
 import { createMessageHandler } from './handlers/message';
-import initGalleryListener from './listeners/gallery';
 import initOptionsListener from './listeners/options';
 import type { EditorApp, EditorAppWindow } from './load-editor';
 import { createStore } from './store';
@@ -30,7 +29,6 @@ const ready = (async () => {
 
 (window as EditorAppWindow).stylebotEditorApp = ready.then((): EditorApp => {
   initOptionsListener(store);
-  initGalleryListener(store);
 
   return {
     handleMessage: createMessageHandler(store, ready),

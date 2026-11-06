@@ -17,14 +17,7 @@ import type {
   StylebotOptions,
   StylebotCommands,
   ReadabilitySettings,
-  RunGoogleDriveSyncResponse,
   VersionHistory,
-  GalleryInstalled,
-  GalleryPublished,
-  GalleryScreenshotResponse,
-  GalleryStyle,
-  InstallGalleryPreviewResponse,
-  ResetGalleryProfileResponse,
   NoBadFontsFontsResponse,
   NoBadFontsVariantsResponse,
 } from '@stylebot/types';
@@ -53,11 +46,9 @@ export type ChromeShimOptions = {
   tabUrl?: string;
   // The page script's answer; "unreachable" leaves the message unanswered.
   pageSupport?: 'supported' | 'unsupported' | 'unreachable';
-  googleDriveSync?: Pending<RunGoogleDriveSyncResponse>;
   versionHistory?: Pending<VersionHistory>;
   // Optional permissions already granted, and how the prompt answers a request.
   permissions?: { granted?: boolean; allowRequest?: boolean };
-  gallery?: GalleryShimOptions;
   noBadFonts?: NoBadFontsShimOptions;
   // What the account row and tab read, and where signing out leaves them.
   account?: AccountState;
@@ -69,36 +60,6 @@ export type NoBadFontsShimOptions = {
   // Every font's variant rows in one answer; null stands in for a failure.
   variants?: Pending<NoBadFontsVariantsResponse>;
 };
-
-export type GalleryShimOptions = {
-  // What the profile published.
-  published?: GalleryPublished;
-  // Capturing the tab; pending keeps it capturing.
-  capture?: Pending<GalleryScreenshotResponse>;
-  // The popup's suggestions for the site, how many the site has in all, the
-  // one the tab previews already, and what installing a preview answers.
-  suggestions?: Array<GalleryStyle>;
-  total?: number;
-  previewing?: GalleryStyle;
-  install?: InstallGalleryPreviewResponse;
-  // The gallery style the profile was installed from.
-  installed?: GalleryInstalled;
-  // What ResetGalleryProfile answers; ok by default.
-  reset?: ResetGalleryProfileResponse;
-};
-
-const GALLERY_SCREENSHOT =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 16 10"><rect width="16" height="10" fill="#dfe6f3"/><rect x="2" y="2" width="9" height="1.5" fill="#2a5fd6"/></svg>'
-  );
-
-// What the gallery shows for a published style, unlike a fresh capture.
-export const GALLERY_PUBLISHED_SCREENSHOT =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 16 10"><rect width="16" height="10" fill="#1a1b26"/><rect x="2" y="2" width="9" height="1.5" fill="#7aa2f7"/></svg>'
-  );
 
 type Callback = (response?: unknown) => void;
 
@@ -159,8 +120,6 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
     url: overrides.tabUrl ?? 'https://example.com/article',
   };
 
-  const gallery = { ...overrides.gallery };
-  let previewing = gallery.previewing;
   let account: AccountState = overrides.account ?? { status: 'signed-out' };
 
   const permissions = {
@@ -190,33 +149,6 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
     // The background's own history, over the shim's storage.
     GetRecentColors: () => getAllRecentColors(),
     AddRecentColor: ({ color = '' }) => addRecentColor(color),
-    // Mirrors the background's own side effects on a real sync, so the
-    // popup (which reads sync state back off storage) sees the result too.
-    RunGoogleDriveSync: () => {
-      if (overrides.googleDriveSync === 'pending') {
-        return new Promise(() => undefined);
-      }
-
-      const response = overrides.googleDriveSync ?? {
-        ok: false,
-        errorKey: 'sync_error_unknown',
-      };
-
-      if (response.ok) {
-        storage['google-drive-sync-needs-auth'] = false;
-        storage['google-drive-sync-state'] = {
-          ...(storage['google-drive-sync-state'] as
-            | Record<string, unknown>
-            | undefined),
-          remoteRevision: response.metadata.modifiedTime,
-          localRevision: response.metadata.modifiedTime,
-          lastSyncedAt: new Date().toISOString(),
-          metadata: response.metadata,
-        };
-      }
-
-      return response;
-    },
 
     ScanVersionHistory: () => {
       if (overrides.versionHistory === 'pending') {
@@ -237,50 +169,6 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
     UndoRestore: () => ({ ok: true }),
 
     OpenEditorSidePanel: () => true,
-
-    GetPublishedGalleryStyle: () => ({
-      published: gallery.published ?? null,
-      installed: gallery.installed ?? null,
-    }),
-    ResetGalleryProfile: () => gallery.reset ?? { ok: true },
-    CaptureGalleryScreenshot: () => {
-      if (gallery.capture === 'pending') {
-        return new Promise(() => undefined);
-      }
-
-      return gallery.capture ?? { ok: true, screenshot: GALLERY_SCREENSHOT };
-    },
-    OpenGalleryDraft: () => ({ ok: true }),
-    GetGalleryStyle: message => {
-      const { styleId } = message as unknown as { styleId: number };
-      const style = gallery.suggestions?.find(each => each.id === styleId);
-
-      return style
-        ? { ok: true, style }
-        : { ok: false, errorKey: 'gallery_error_not_found' };
-    },
-    GetGallerySuggestions: () => ({
-      ok: true,
-      styles: gallery.suggestions ?? [],
-      total: gallery.total ?? gallery.suggestions?.length ?? 0,
-      site: 'example.com',
-    }),
-    PreviewGalleryStyle: message => {
-      const { id } = message as unknown as { id: number };
-      previewing = gallery.suggestions?.find(each => each.id === id);
-
-      return { ok: true };
-    },
-    GetGalleryPreview: () => ({
-      preview: previewing
-        ? { style: previewing, css: '', importUrls: [] }
-        : null,
-    }),
-    InstallGalleryPreview: () =>
-      gallery.install ?? { ok: true, profileName: previewing?.name ?? '' },
-    EndGalleryPreview: () => {
-      previewing = undefined;
-    },
 
     CreateProfile: () => ({ profileId: 'created' }),
 
@@ -362,7 +250,7 @@ export const installChrome = (overrides: ChromeShimOptions = {}): void => {
         callback?: Callback
       ) => respond(callback, tabResponses[message.name]?.()),
       create: () => respond(undefined, undefined),
-      // The popup's gallery preview port; the stand-in page has no listener.
+      // The editor's page-bridge port; the stand-in page has no listener.
       connect: () => ({
         postMessage: () => undefined,
         disconnect: () => undefined,

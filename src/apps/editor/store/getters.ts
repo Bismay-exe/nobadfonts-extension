@@ -3,7 +3,6 @@ import type * as postcss from 'postcss';
 import type { State } from './';
 import type { CssDeclaration } from '@stylebot/types';
 import type { RoleColorGroups } from '@stylebot/css';
-import { hashCss } from '@stylebot/gallery';
 import {
   getRule,
   getRuleForSelector,
@@ -13,18 +12,10 @@ import {
   mergeShorthands,
   getFilterEffectValueForPage,
   getAlreadyUsedColors,
-  removeEmptyRules,
 } from '@stylebot/css';
 
 // A rule for every element can't be judged by the one that was picked.
 const PAGE_WIDE_SELECTOR = /^\s*(\*|html|body|:root)\s*$/i;
-
-/**
- * Whether css hashes to a gallery version, as typed or as saved: the editor
- * holds blank rules for picked elements that saving drops.
- */
-const matchesCssHash = (css: string, cssHash: string): boolean =>
-  hashCss(css) === cssHash || hashCss(removeEmptyRules(css)) === cssHash;
 
 export type OtherSelectorValue = {
   selector: string;
@@ -159,16 +150,6 @@ export default {
   readabilityActive: (state: State): boolean => {
     return state.readability && state.page.readerable;
   },
-
-  // Whether the CSS differs from what was last published to the gallery.
-  hasUnpublishedChanges: (state: State): boolean =>
-    state.publishedGalleryStyle !== null &&
-    !matchesCssHash(state.css, state.publishedGalleryStyle.cssHash),
-
-  // Whether the CSS differs from the gallery version it was installed from.
-  hasChangesSinceInstall: (state: State): boolean =>
-    state.installedGalleryStyle !== null &&
-    !matchesCssHash(state.css, state.installedGalleryStyle.cssHash),
 
   // The name of the profile being edited; empty for an unnamed one.
   activeProfileName: (state: State): string => {

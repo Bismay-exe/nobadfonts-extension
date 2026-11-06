@@ -3,6 +3,9 @@
 ._*
 .Spotlight-V100
 .Trashes
+.env
+.env.local
+.env.*.local
 dist
 firefox-dist
 safari-dist

@@ -10,18 +10,8 @@ import type {
   StyleWithoutUrl,
   StylebotOptions,
   StylebotCommands,
-  SyncState,
-  SyncErrorKey,
   RestoreOptions,
 } from '@stylebot/types';
-import {
-  getGoogleDriveSyncEnabled,
-  getSyncState,
-  getSyncNeedsAuth,
-  setGoogleDriveSyncEnabled,
-  clearSyncState,
-  dismissSyncConflict,
-} from '@stylebot/sync';
 import { getCurrentTimestamp } from '@stylebot/utils';
 import {
   activateProfile,
@@ -37,31 +27,16 @@ import {
   setOption,
   getAllOptions,
   getCommands,
-  runGoogleDriveSync,
   scanVersionHistory,
   restoreVersion,
   undoRestore,
 } from '../utils';
-
-// Only failures get a banner; success shows in the card's synced pill.
-export type SyncStatus = {
-  type: 'error';
-  messageKey: SyncErrorKey;
-  detail?: string;
-} | null;
 
 type State = {
   styles: StyleMap;
 
   options: StylebotOptions | null;
   commands: StylebotCommands;
-
-  googleDriveSyncEnabled: boolean;
-  googleDriveSyncState: SyncState | undefined;
-  googleDriveSyncNeedsAuth: boolean;
-
-  syncInProgress: boolean;
-  syncStatus: SyncStatus;
 };
 
 /**
@@ -100,11 +75,6 @@ export const createStore = (): Store<State> => {
       styles: {},
       options: null,
       commands: defaultCommands,
-      googleDriveSyncEnabled: false,
-      googleDriveSyncState: undefined,
-      googleDriveSyncNeedsAuth: false,
-      syncInProgress: false,
-      syncStatus: null,
     },
 
     actions: {
@@ -118,14 +88,6 @@ export const createStore = (): Store<State> => {
 
       async getCommands({ state }) {
         state.commands = await getCommands();
-      },
-
-      async getGoogleDriveSyncMetadata({ state }) {
-        state.googleDriveSyncEnabled = await getGoogleDriveSyncEnabled();
-        if (state.googleDriveSyncEnabled) {
-          state.googleDriveSyncState = await getSyncState();
-          state.googleDriveSyncNeedsAuth = await getSyncNeedsAuth();
-        }
       },
 
       scanVersionHistory(
@@ -156,11 +118,6 @@ export const createStore = (): Store<State> => {
         const ok = await undoRestore(entryId, profileId);
         await dispatch('getAllStyles');
         return ok;
-      },
-
-      async dismissSyncConflict({ state }, url: string) {
-        await dismissSyncConflict(url);
-        state.googleDriveSyncState = await getSyncState();
       },
 
       /**
@@ -309,64 +266,6 @@ export const createStore = (): Store<State> => {
         // @ts-expect-error TS cannot correlate the key/value union members of StylebotOptions.
         state.options[name] = value;
         setOption(name, value);
-      },
-
-      async setGoogleDriveSyncEnabled({ state, dispatch }, enabled: boolean) {
-        state.googleDriveSyncEnabled = enabled;
-        setGoogleDriveSyncEnabled(enabled);
-
-        if (enabled) {
-          await dispatch('syncWithGoogleDrive');
-
-          // Connecting only counts once a sync has gone through; the banner
-          // keeps the reason it didn't.
-          if (state.syncStatus && !state.googleDriveSyncState) {
-            state.googleDriveSyncEnabled = false;
-            setGoogleDriveSyncEnabled(false);
-          }
-          return;
-        }
-
-        state.googleDriveSyncState = undefined;
-        state.googleDriveSyncNeedsAuth = false;
-        state.syncStatus = null;
-
-        // Leaving the stored state behind meant re-enabling picked up a stale
-        // record of a sync that may no longer reflect either side. The Drive file
-        // itself is the user's backup and is left alone.
-        await clearSyncState();
-      },
-
-      dismissSyncStatus({ state }) {
-        state.syncStatus = null;
-      },
-
-      async syncWithGoogleDrive({ state, dispatch }) {
-        if (state.syncInProgress) {
-          return;
-        }
-
-        state.syncInProgress = true;
-        state.syncStatus = null;
-
-        try {
-          const response = await runGoogleDriveSync();
-
-          // A run that was in flight when the user disconnected reports
-          // not-enabled; there is no card left to show that on.
-          if (!response?.ok && state.googleDriveSyncEnabled) {
-            state.syncStatus = {
-              type: 'error',
-              messageKey: response?.errorKey ?? 'sync_error_unknown',
-              detail: response?.errorDetail,
-            };
-          }
-
-          await dispatch('getGoogleDriveSyncMetadata');
-          await dispatch('getAllStyles');
-        } finally {
-          state.syncInProgress = false;
-        }
       },
     },
   });

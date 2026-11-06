@@ -2,18 +2,18 @@
   <section
     v-if="visible"
     class="rating-prompt"
-    :aria-label="t('enjoying_stylebot')"
+    :aria-label="t('enjoying_nobadfonts')"
   >
     <div class="rating-prompt-card">
       <div class="rating-prompt-text">
         <s-heading as="h2" size="md">
-          {{ t('enjoying_stylebot') }}
+          {{ t('enjoying_nobadfonts') }}
         </s-heading>
 
         <s-text variant="muted">
           {{
             t(
-              'if_stylebot_has_made_the_web_nicer_for_you_a_quick_rating_helps_others_find_it'
+              'if_nobadfonts_has_made_the_web_nicer_for_you_a_quick_rating_helps_others_find_it'
             )
           }}
         </s-text>
@@ -21,7 +21,7 @@
 
       <div>
         <s-button class="rating-prompt-rate" @click="rate">
-          {{ t('rate_stylebot') }}
+          {{ t('rate_nobadfonts') }}
         </s-button>
       </div>
 

@@ -1,11 +1,11 @@
 ---
 name: try-in-browser
-description: Launch Stylebot in a real, headed Chrome window (via `yarn dev:chrome`) so the user can manually eyeball a change — in whatever checkout the current session is in, worktree or main. Use when the user wants to "try this out", "see it in the browser", "manually test/validate", "load the extension so I can look at it", or "smoke test this change" themselves, as opposed to running the automated e2e suite.
+description: Launch NoBadFonts in a real, headed Chrome window (via `yarn dev:chrome`) so the user can manually eyeball a change — in whatever checkout the current session is in, worktree or main. Use when the user wants to "try this out", "see it in the browser", "manually test/validate", "load the extension so I can look at it", or "smoke test this change" themselves, as opposed to running the automated e2e suite.
 ---
 
-# Try Stylebot in the browser
+# Try NoBadFonts in the browser
 
-Stylebot's AGENTS.md defaults to Playwright e2e for verifying changes — use that
+NoBadFonts's AGENTS.md defaults to Playwright e2e for verifying changes — use that
 (`yarn e2e`) when the goal is confirming correctness. Reach for this skill instead
 when the **user** wants to look at the extension with their own eyes: visual/UI tweaks,
 "does this feel right" judgment calls, or anything the e2e suite doesn't cover.
@@ -38,7 +38,7 @@ when the **user** wants to look at the extension with their own eyes: visual/UI 
    ```
    Use `run_in_background: true`. Do not use `yarn dev:chrome:headless` here — headless
    defeats the purpose of *manual* validation.
-4. Watch the output for `🎉 Stylebot loaded on Hacker News` to confirm it launched
+4. Watch the output for `🎉 NoBadFonts loaded on Hacker News` to confirm it launched
    rather than assuming success. If it fails to launch, the most likely cause is a
    `dev:chrome` already running in this same checkout (the profile dir is locked) —
    check for a stray background task before retrying.

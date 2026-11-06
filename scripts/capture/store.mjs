@@ -4,9 +4,8 @@
 //   yarn capture:store [--safari | --phone] [--only <name>...] [--out <dir>] [--no-build]
 //
 // With --safari, the Mac App Store's set goes into store/safari/ instead, at
-// 2560×1600 and without the CLI. With --phone, the same screens are cut out,
-// without their headlines, for the tour on stylebot.dev's phone layout, into
-// captures/tour/.
+// 2560×1600. With --phone, the same screens are cut out, without their
+// headlines, for the website's phone layout, into captures/tour/.
 
 import path from 'node:path';
 
@@ -18,7 +17,7 @@ import { capturesDir, shownPath, takeOutput } from './output.mjs';
 const USAGE = `usage: yarn capture:store [--safari | --phone] [--only <name>...] [--out <dir>] [--no-build]
 
   --safari    take the Mac App Store's set, at 2560×1600, into store/safari/
-  --phone     cut the screens out for stylebot.dev's phone tour, into
+  --phone     cut the screens out for the website's phone layout, into
               captures/tour/
   --out       save into this directory instead
   --only      retake just these shots, by name or number (e.g. --only 8-readability 2)
@@ -49,9 +48,7 @@ const options = safari ? { scale: 'device' } : {};
 const only = rest.includes('--only')
   ? rest.slice(rest.indexOf('--only') + 1).filter(arg => !arg.startsWith('--'))
   : [];
-const available = SHOTS.filter(shot =>
-  safari ? !shot.cli : !phone || shot.phone
-);
+const available = SHOTS.filter(shot => !phone || shot.phone);
 const shots = only.length
   ? available.filter(({ name }) =>
       only.some(wanted => name === wanted || name.startsWith(`${wanted}-`))

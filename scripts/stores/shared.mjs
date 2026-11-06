@@ -79,7 +79,7 @@ export const requireReleaseTag = version => {
 
 /**
  * Checks what's uploaded is the release's tagged commit, along with the build
- * secret and the store's credentials, and returns the version being released.
+ * client id and the store's credentials, and returns the version being released.
  */
 export const prepareUpload = envNames => {
   if (git(['status', '--porcelain'])) {
@@ -88,7 +88,7 @@ export const prepareUpload = envNames => {
     );
   }
 
-  requireEnv(['STYLEBOT_GOOGLE_CLIENT_SECRET', ...envNames]);
+  requireEnv(['NOBADFONTS_OAUTH_CLIENT_ID', ...envNames]);
 
   const { version } = JSON.parse(
     readFileSync(path.join(rootDir, 'package.json'), 'utf8')
@@ -105,7 +105,7 @@ export const prepareUpload = envNames => {
  */
 export const packageChromium = version => {
   const commit = git(['rev-parse', '--short', 'HEAD']);
-  const zipPath = path.join(releaseDir, `stylebot-${version}-${commit}.zip`);
+  const zipPath = path.join(releaseDir, `nobadfonts-${version}-${commit}.zip`);
 
   if (existsSync(zipPath)) {
     console.log(`Reusing ${path.relative(rootDir, zipPath)}`);

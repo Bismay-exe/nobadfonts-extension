@@ -1,6 +1,6 @@
 # Selectors
 
-When the user picks an element with the inspector, Stylebot generates a selector for it.
+When the user picks an element with the inspector, NoBadFonts generates a selector for it.
 The goal is a selector that is **stable** (survives page rebuilds) and
 **meaningful** (reads like something the site author wrote), while still being
 specific enough to be useful.

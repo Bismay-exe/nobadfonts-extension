@@ -66,7 +66,7 @@ describe('isSidePanelGranted', () => {
     makeChrome({ sidePanel: true });
     const sidePanel = loadModule();
 
-    sidePanel.markSidePanelAwaitingReload({ permissions: ['nativeMessaging'] });
+    sidePanel.markSidePanelAwaitingReload({ permissions: ['tabs'] });
     expect(sidePanel.isSidePanelGranted()).toBe(true);
 
     sidePanel.markSidePanelAwaitingReload({ permissions: ['sidePanel'] });

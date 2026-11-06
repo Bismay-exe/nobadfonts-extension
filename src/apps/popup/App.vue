@@ -2,11 +2,6 @@
   <s-theme-provider class="popup" :mode="appearance">
     <div v-if="tab && pageSupport && pageSupport !== 'supported'">
       <unsupported-page :url="tab.url || ''" :support="pageSupport" />
-
-      <template v-if="syncEnabled">
-        <div class="popup-divider" />
-        <sync-stylebot standalone />
-      </template>
     </div>
 
     <div v-else-if="tab && tab.id && pageSupport === 'supported'">
@@ -18,11 +13,8 @@
         :enabled="siteEnabled"
         :disable-off="isOpen"
         :joined="hasToggleRows"
-        :previewing="galleryPreviewing"
-        :publish-items="publishItems"
         @pick="pickSiteProfile"
         @edit="editSiteProfile"
-        @publish="publishSiteProfile"
         @rename="renameSiteProfile"
         @delete="deleteSiteProfile"
         @create="createSiteProfile"
@@ -53,10 +45,8 @@
           :shortcut="styleShortcut"
           :disable-toggle="isOpen || (pageReaderable && readability)"
           :initial-enabled="styles[0].enabled"
-          :publish-item="publishItems[siteProfiles[0].id] || null"
           @edit="editSiteProfile(siteProfiles[0].id)"
           @rename="renameSiteProfile(siteProfiles[0].id, $event)"
-          @publish="publishSiteProfile(siteProfiles[0].id)"
           @delete="deleteSiteStyle"
         />
 
@@ -85,41 +75,10 @@
         />
       </div>
 
-      <the-gallery-suggestions
-        v-if="stylesLoaded"
-        ref="gallery"
-        :tab="tab"
-        :compact="styles.length > 0"
-        @preview="galleryPreviewing = $event"
-        @installing="galleryInstalling = $event"
-        @installed="loadStyles"
-      />
-
       <div class="popup-divider" />
 
-      <div
-        class="popup-footer"
-        :class="{ 'popup-footer--above-sync': syncEnabled }"
-      >
-        <template v-if="galleryPreviewing">
-          <s-pill-button
-            class="popup-preview-stop"
-            :disabled="galleryInstalling"
-            @click="stopGalleryPreview"
-          >
-            {{ t('stop_preview') }}
-          </s-pill-button>
-          <s-pill-button
-            :disabled="galleryInstalling"
-            :aria-busy="galleryInstalling ? 'true' : undefined"
-            @click="installGalleryPreview"
-          >
-            {{ t('install') }}
-          </s-pill-button>
-        </template>
-        <!-- Kept in place so editing a profile can still open the editor. -->
+      <div class="popup-footer">
         <toggle-stylebot
-          v-show="!galleryPreviewing"
           ref="toggle"
           :is-open="isOpen"
           :tab="tab"
@@ -134,8 +93,6 @@
 
       <account-row />
 
-      <sync-stylebot v-if="syncEnabled" @synced="loadStyles" />
-
       <release-notification />
 
       <!-- Asked only on a page the user has styled, where they see it work. -->
@@ -146,7 +103,7 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { SHeading, SPillButton, SThemeProvider } from '@stylebot/components';
+import { SHeading, SThemeProvider } from '@stylebot/components';
 
 import StyleComponent from './components/Style.vue';
 import SiteProfiles from './components/SiteProfiles.vue';
@@ -154,12 +111,10 @@ import AccountRow from './components/AccountRow.vue';
 import CreateProfile from './components/CreateProfile.vue';
 import OptionsButton from './components/OptionsButton.vue';
 import Readability from './components/Readability.vue';
-import SyncStylebot from './components/SyncStylebot.vue';
 import ToggleStylebot from './components/ToggleStylebot.vue';
 import UnsupportedPage from './components/UnsupportedPage.vue';
 import ReleaseNotification from './components/notifications/ReleaseNotification.vue';
 import RatingPrompt from './components/notifications/RatingPrompt.vue';
-import TheGallerySuggestions from './components/TheGallerySuggestions.vue';
 
 import {
   getStyles,
@@ -176,12 +131,8 @@ import {
   deleteStyle,
   createProfile,
   getRestoredPageSupport,
-  getPublishMenuItem,
-  publishProfileToGallery,
 } from './utils';
-import type { GalleryMenuItem } from '@stylebot/gallery';
 
-import { getGoogleDriveSyncEnabled } from '@stylebot/sync';
 import {
   addProfile,
   expandProfiles,
@@ -206,7 +157,6 @@ export default Vue.extend({
 
   components: {
     SHeading,
-    SPillButton,
     SThemeProvider,
     OptionsButton,
     StyleComponent,
@@ -215,11 +165,9 @@ export default Vue.extend({
     CreateProfile,
     ToggleStylebot,
     Readability,
-    SyncStylebot,
     UnsupportedPage,
     ReleaseNotification,
     RatingPrompt,
-    TheGallerySuggestions,
   },
 
   data(): {
@@ -228,40 +176,27 @@ export default Vue.extend({
     pageReaderable: boolean;
     tab?: chrome.tabs.Tab;
     styles: Array<Style>;
-    // The gallery waits for the styles, to know which way to show itself.
-    stylesLoaded: boolean;
     // The site's own style, as picked here since the popup opened.
     siteActiveProfile: string;
     siteEnabled: boolean;
-    syncEnabled: boolean;
     // Null until the tab answers, so neither view shows before it does.
     pageSupport: PageSupport | null;
     commands?: GetCommandsResponse;
     appearance: StylebotAppearance;
     dockLocation: StylebotDockLocation | '';
-    // A gallery style is shown on the page in place of the site's own.
-    galleryPreviewing: boolean;
-    galleryInstalling: boolean;
-    // Each site profile's way into publishing, once known.
-    publishItems: Record<string, GalleryMenuItem | null>;
   } {
     return {
       styles: [],
-      stylesLoaded: false,
       siteActiveProfile: '',
       siteEnabled: true,
       isOpen: false,
       tab: undefined,
       readability: false,
       pageReaderable: false,
-      syncEnabled: false,
       pageSupport: null,
       commands: undefined,
       appearance: 'system',
       dockLocation: '',
-      galleryPreviewing: false,
-      galleryInstalling: false,
-      publishItems: {},
     };
   },
 
@@ -368,10 +303,6 @@ export default Vue.extend({
       this.loadStyles();
     });
 
-    getGoogleDriveSyncEnabled().then(enabled => {
-      this.syncEnabled = enabled;
-    });
-
     getCommands(commands => {
       this.commands = commands;
     });
@@ -387,8 +318,7 @@ export default Vue.extend({
 
   methods: {
     /**
-     * Reads the tab's styles; again after a sync, which may have brought in
-     * styles or profiles edited on another device.
+     * Reads the tab's styles.
      */
     loadStyles(): void {
       if (!this.tab) {
@@ -404,30 +334,14 @@ export default Vue.extend({
               Number(b.url === defaultStyle?.url) -
               Number(a.url === defaultStyle?.url)
           );
-        this.stylesLoaded = true;
-
         const [site] = this.styles;
 
         if (site) {
           this.siteEnabled = site.enabled;
           this.siteActiveProfile = expandProfiles(site).active;
-          this.loadPublishItems(site);
         }
         this.readability = !!defaultStyle && defaultStyle.readability;
       });
-    },
-
-    async loadPublishItems(site: Style): Promise<void> {
-      const { sheets } = expandProfiles(site);
-      const entries = await Promise.all(
-        Object.entries(sheets).map(async ([id, { css }]) => {
-          const item = await getPublishMenuItem(site.url, id, css);
-
-          return [id, item] as const;
-        })
-      );
-
-      this.publishItems = Object.fromEntries(entries);
     },
 
     profilesOf(style: Style): Array<ProfileSummary> {
@@ -440,11 +354,6 @@ export default Vue.extend({
      */
     pickSiteProfile(id: string | null): void {
       const { url } = this.styles[0];
-
-      // Picking a profile ends a gallery preview, so the pick shows.
-      (
-        this.$refs.gallery as InstanceType<typeof TheGallerySuggestions>
-      )?.cancel();
 
       if (id === null) {
         if (this.siteEnabled) {
@@ -465,18 +374,6 @@ export default Vue.extend({
       this.siteEnabled = true;
     },
 
-    stopGalleryPreview(): void {
-      (
-        this.$refs.gallery as InstanceType<typeof TheGallerySuggestions>
-      )?.cancel();
-    },
-
-    installGalleryPreview(): void {
-      (
-        this.$refs.gallery as InstanceType<typeof TheGallerySuggestions>
-      )?.install();
-    },
-
     /**
      * Switches the site to a profile and opens the editor on it.
      */
@@ -486,22 +383,6 @@ export default Vue.extend({
       if (!this.isOpen) {
         (this.$refs.toggle as InstanceType<typeof ToggleStylebot>).toggle();
       }
-    },
-
-    /**
-     * Opens the Gallery page a profile's item links to, or else publishes a
-     * profile of yours on the gallery site, without opening the editor.
-     */
-    publishSiteProfile(id: string): void {
-      const galleryUrl = this.publishItems[id]?.url;
-
-      if (galleryUrl) {
-        chrome.tabs.create({ url: galleryUrl });
-      } else if (this.tab?.id) {
-        publishProfileToGallery(this.tab.id, this.styles[0].url, id);
-      }
-
-      window.close();
     },
 
     renameSiteProfile(id: string, name: string): void {
@@ -647,10 +528,6 @@ body {
 .popup-footer .pill-btn:disabled {
   cursor: default;
   opacity: 0.6;
-}
-
-.popup-footer.popup-footer--above-sync {
-  padding-bottom: 8px;
 }
 
 .row-label {

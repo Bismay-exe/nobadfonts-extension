@@ -10,10 +10,7 @@
   <div
     v-else
     class="stylebot stylebot-docked"
-    :class="[
-      dockedRight ? 'right' : 'left',
-      { 'stylebot-resizing': dragging, 'stylebot-capturing': capturing },
-    ]"
+    :class="[dockedRight ? 'right' : 'left', { 'stylebot-resizing': dragging }]"
     :style="{ width: `${width}px` }"
   >
     <slot></slot>
@@ -73,10 +70,6 @@ export default Vue.extend({
       return this.$store.state.visible;
     },
 
-    capturing(): boolean {
-      return this.$store.state.capturing;
-    },
-
     dragging(): boolean {
       return this.drag !== null;
     },
@@ -108,10 +101,6 @@ export default Vue.extend({
     },
 
     width() {
-      this.adjustPageLayout();
-    },
-
-    capturing() {
       this.adjustPageLayout();
     },
   },
@@ -201,7 +190,7 @@ export default Vue.extend({
       }
 
       // todo: this needs a lot of work to be more robust.
-      if (this.layout.adjustPageLayout && this.visible && !this.capturing) {
+      if (this.layout.adjustPageLayout && this.visible) {
         const reserved = this.width + MARGIN;
 
         if (this.layout.dockLocation === 'left') {
@@ -256,19 +245,8 @@ export default Vue.extend({
     }
   }
 
-  &.stylebot-capturing {
-    &.right {
-      transform: translateX(calc(100% + 64px));
-    }
-
-    &.left {
-      transform: translateX(calc(-100% - 64px));
-    }
-  }
-
   &.stylebot-resizing {
     user-select: none;
-
     .stylebot-content {
       pointer-events: none;
     }

@@ -6,7 +6,6 @@ import {
   isNoBadFontsCssUrl,
   isNoBadFontsHostUrl,
 } from '@stylebot/utils';
-import { hashCss } from '@stylebot/gallery';
 import {
   COMPILED_STYLES_KEY,
   STYLES_KEY,
@@ -16,23 +15,17 @@ import {
   isForceImportant,
   withForceImportant,
   hasAnyCss,
-  listProfiles,
   setProfileCss,
-  setProfileGalleryListing,
-  removeGalleryListings,
   addProfile,
   activateProfile,
   renameProfile as renameStyleProfile,
   removeProfile,
   expandProfiles,
-  getProfileSheet,
-  freeProfileName,
-  DEFAULT_PROFILE_ID,
+  listProfiles,
 } from '@stylebot/saved-styles';
 
 import type {
   CompiledStyles,
-  GalleryListing,
   StyleMap,
   StyleWithoutUrl,
   ApplyStylesToTab,
@@ -41,7 +34,6 @@ import type {
 
 import { compileStyles } from './compiled-styles';
 import { recordStyleChange } from '@stylebot/history';
-import { scheduleSyncAfterEdit } from './sync-scheduler';
 import { sanitizeNoBadFontsCss } from './no-bad-fonts';
 
 export { getStylesForPage } from '@stylebot/saved-styles';
@@ -149,10 +141,6 @@ const writeToStorage = async (
       restoredFrom,
       entryId,
     });
-  }
-
-  if (!fromSync) {
-    await scheduleSyncAfterEdit();
   }
 
   return modifiedTime;
@@ -501,180 +489,6 @@ export const createProfile = async (
 };
 
 /**
- * Adds css as a new, active profile of a url's style and turns the style on.
- * Without a gallery listing, the same name and css switch back to that
- * profile; with one, it replaces an empty default profile.
- */
-export const installProfile = async (
-  url: string,
-  {
-    name,
-    css,
-    galleryListing,
-  }: { name: string; css: string; galleryListing?: GalleryListing }
-): Promise<{ name: string; id: string }> => {
-  let installedName = name;
-  let installedId = '';
-
-  await update(styles => {
-    const existing = styles[url] ?? {
-      css: '',
-      readability: false,
-      enabled: true,
-      modifiedTime: getCurrentTimestamp(),
-    };
-
-    const profiles = listProfiles(existing);
-    const { sheets } = expandProfiles(existing);
-    const isSameInstall = (profile: { id: string; name: string }) =>
-      profile.name === name && sheets[profile.id].css === css;
-    // A gallery install gets its own profile, never one that only looks the same.
-    const installed = galleryListing ? undefined : profiles.find(isSameInstall);
-
-    if (installed) {
-      installedId = installed.id;
-      const style = activateProfile(existing, installed.id);
-
-      if (style === existing && existing.enabled) {
-        return undefined;
-      }
-
-      styles[url] = { ...style, enabled: true };
-      return styles;
-    }
-
-    installedName = freeProfileName(
-      name,
-      profiles.map(profile => profile.name)
-    );
-    installedId = crypto.randomUUID();
-
-    const added = addProfile(existing, {
-      id: installedId,
-      name: installedName,
-      css,
-      galleryListing,
-      activate: true,
-    });
-    const defaultSheet = sheets[DEFAULT_PROFILE_ID];
-    const replacesDefault =
-      galleryListing &&
-      defaultSheet &&
-      !defaultSheet.css.trim() &&
-      !defaultSheet.galleryListing;
-
-    styles[url] = editStyle(
-      replacesDefault ? removeProfile(added, DEFAULT_PROFILE_ID) : added,
-      { enabled: true }
-    );
-
-    return styles;
-  });
-
-  return { name: installedName, id: installedId };
-};
-
-/**
- * Switches a url's style back to a profile installed before, replacing its
- * css and gallery listing when given, and turns the style on. Resolves with the
- * profile's name, or null when the profile is gone.
- */
-export const reinstallProfile = async (
-  url: string,
-  profileId: string,
-  {
-    css,
-    galleryListing,
-  }: { css?: string; galleryListing?: GalleryListing } = {}
-): Promise<string | null> => {
-  let name: string | null = null;
-
-  await update(styles => {
-    const existing = styles[url];
-    const sheet = getProfileSheet(existing, profileId);
-
-    if (!existing || !sheet) {
-      return undefined;
-    }
-
-    name = sheet.name;
-
-    let style = activateProfile(existing, profileId);
-
-    if (css !== undefined) {
-      style = setProfileCss(style, profileId, css);
-    }
-
-    if (galleryListing) {
-      style = setProfileGalleryListing(style, profileId, galleryListing);
-    }
-
-    if (style === existing && existing.enabled) {
-      return undefined;
-    }
-
-    styles[url] = editStyle(style, { enabled: true });
-    return styles;
-  });
-
-  return name;
-};
-
-/**
- * Updates an installed profile to a newer version of its gallery style,
- * leaving which profile is active and whether the style is on as they are.
- * Skips a profile edited since it was installed, or already at that version.
- */
-export const updateGalleryProfile = (
-  url: string,
-  profileId: string,
-  css: string,
-  galleryListing: GalleryListing
-) =>
-  updateStyle(url, style => {
-    const sheet = getProfileSheet(style, profileId);
-    const current = sheet?.galleryListing;
-    const isOutdated =
-      current?.styleId === galleryListing.styleId &&
-      current.version < galleryListing.version &&
-      hashCss(sheet?.css ?? '') === current.cssHash;
-
-    if (!isOutdated) {
-      return style;
-    }
-
-    const updated = setProfileCss(style, profileId, css);
-    return setProfileGalleryListing(updated, profileId, galleryListing);
-  });
-
-/**
- * Sets the gallery listing of one of a url's profiles.
- */
-export const setGalleryListing = (
-  url: string,
-  profileId: string,
-  galleryListing: GalleryListing
-) =>
-  updateStyle(url, style =>
-    setProfileGalleryListing(style, profileId, galleryListing)
-  );
-
-/**
- * Puts a gallery style's css back in one of a url's profiles, dropping the
- * user's edits, with the listing of the version it came from.
- */
-export const resetGalleryProfile = (
-  url: string,
-  profileId: string,
-  css: string,
-  galleryListing: GalleryListing
-) =>
-  updateStyle(url, style => {
-    const updated = setProfileCss(style, profileId, css);
-    return setProfileGalleryListing(updated, profileId, galleryListing);
-  });
-
-/**
  * Puts urls' styles back as they were, removing those that had none.
  */
 export const restoreStyles = (
@@ -690,27 +504,6 @@ export const restoreStyles = (
     }
 
     return styles;
-  });
-
-/**
- * Drops a gallery style's listing from every profile, once it's unpublished.
- */
-export const removeStyleGalleryListings = (styleId: number) =>
-  update(styles => {
-    const isUnpublished = (galleryListing: GalleryListing) =>
-      galleryListing.styleId === styleId;
-    let changed = false;
-
-    for (const [url, style] of Object.entries(styles)) {
-      const updated = removeGalleryListings(style, isUnpublished);
-
-      if (updated !== style) {
-        styles[url] = editStyle(updated, {});
-        changed = true;
-      }
-    }
-
-    return changed ? styles : undefined;
   });
 
 /**

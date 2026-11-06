@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help improve Stylebot
+about: Create a report to help improve NoBadFonts
 title: '[Bug]'
 labels: Bug
 assignees: ''

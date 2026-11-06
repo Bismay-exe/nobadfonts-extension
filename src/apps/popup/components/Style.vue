@@ -45,11 +45,9 @@
           <profile-menu
             v-if="menuOpen"
             deletes-style
-            :publish-item="publishItem"
             @click.native.prevent
             @edit="act('edit')"
             @rename="startRename"
-            @publish="act('publish')"
             @delete="act('delete')"
             @close="closeMenu"
           />
@@ -93,7 +91,6 @@ import type { PropType } from 'vue';
 import type { ProfileSummary } from '@stylebot/saved-styles';
 import PopupRow from './PopupRow.vue';
 import { ComposeIcon, MoreIcon } from '@stylebot/icons';
-import type { GalleryMenuItem } from '@stylebot/gallery';
 import ProfileMenu from './ProfileMenu.vue';
 import ProfileNameInput from './ProfileNameInput.vue';
 import {
@@ -160,10 +157,6 @@ export default Vue.extend({
       type: Array as PropType<Array<ProfileSummary>>,
       default: () => [],
     },
-    publishItem: {
-      type: Object as PropType<GalleryMenuItem | null>,
-      default: null,
-    },
   },
 
   data(): {
@@ -229,7 +222,7 @@ export default Vue.extend({
       (this.$refs.more as HTMLElement | undefined)?.focus();
     },
 
-    act(action: 'edit' | 'publish' | 'delete'): void {
+    act(action: 'edit' | 'delete'): void {
       this.menuOpen = false;
       this.$emit(action);
     },

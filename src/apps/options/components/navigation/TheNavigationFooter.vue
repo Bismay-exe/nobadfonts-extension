@@ -5,10 +5,12 @@
       <a target="_blank" :href="manualUrl">
         {{ t('help_options') }}
       </a>
-      <a target="_blank" href="http://github.com/ankit/stylebot">
+      <a
+        target="_blank"
+        href="https://github.com/Bismay-exe/nobadfonts-extension"
+      >
         {{ t('github') }}
       </a>
-      <a target="_blank" href="https://ko-fi.com/stylebot">{{ t('donate') }}</a>
     </div>
   </div>
 </template>
@@ -23,7 +25,7 @@ export default Vue.extend({
   data(): { version: string; manualUrl: string } {
     return {
       version: getExtensionVersion(),
-      manualUrl: getSiteUrl('/manual'),
+      manualUrl: getSiteUrl('/docs'),
     };
   },
 });

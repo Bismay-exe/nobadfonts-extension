@@ -26,9 +26,9 @@ export const ShownWhenEligible: StoryObj = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('Enjoying Stylebot?')).toBeVisible();
+    await expect(await canvas.findByText('Enjoying NoBadFonts?')).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'Rate Stylebot' })
+      canvas.getByRole('button', { name: 'Rate NoBadFonts' })
     ).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Dismiss' })).toBeVisible();
   },
@@ -41,7 +41,7 @@ export const HiddenWhenTooNew: StoryObj = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole('heading', { name: 'example.com' });
-    await expect(canvas.queryByText('Enjoying Stylebot?')).toBeNull();
+    await expect(canvas.queryByText('Enjoying NoBadFonts?')).toBeNull();
   },
 };
 
@@ -55,7 +55,7 @@ export const HiddenWithFewStyles: StoryObj = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole('heading', { name: 'example.com' });
-    await expect(canvas.queryByText('Enjoying Stylebot?')).toBeNull();
+    await expect(canvas.queryByText('Enjoying NoBadFonts?')).toBeNull();
   },
 };
 
@@ -66,7 +66,7 @@ export const HiddenOnceDismissed: StoryObj = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole('heading', { name: 'example.com' });
-    await expect(canvas.queryByText('Enjoying Stylebot?')).toBeNull();
+    await expect(canvas.queryByText('Enjoying NoBadFonts?')).toBeNull();
   },
 };
 
@@ -80,7 +80,7 @@ export const DismissHidesForGood: StoryObj = {
     await user.click(await canvas.findByRole('button', { name: 'Dismiss' }));
 
     await waitFor(() =>
-      expect(canvas.queryByText('Enjoying Stylebot?')).toBeNull()
+      expect(canvas.queryByText('Enjoying NoBadFonts?')).toBeNull()
     );
     await expect(create).not.toHaveBeenCalled();
     await expect(
@@ -91,18 +91,18 @@ export const DismissHidesForGood: StoryObj = {
 
 export const RateOpensStore: StoryObj = {
   ...popup(ratingEligible()),
-  name: 'Rate Stylebot opens the store review page and stops asking',
+  name: 'Rate NoBadFonts opens the store review page and stops asking',
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const create = spyOn(chrome.tabs, 'create');
     spyOn(window, 'close').mockImplementation(() => undefined);
 
     await user.click(
-      await canvas.findByRole('button', { name: 'Rate Stylebot' })
+      await canvas.findByRole('button', { name: 'Rate NoBadFonts' })
     );
 
     await expect(create).toHaveBeenCalledWith({
-      url: 'https://chromewebstore.google.com/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha/reviews',
+      url: 'https://chromewebstore.google.com/search/NoBadFonts',
     });
     await waitFor(async () =>
       expect(

@@ -12,5 +12,3 @@ export function buildManifest(options: {
   preview?: boolean;
   store?: string;
 }): Manifest;
-
-export function supportsCLI(browser?: string): boolean;

@@ -6,11 +6,11 @@ import { openAsBlob } from 'node:fs';
 
 import { poll, readJson, requireEnv } from './shared.mjs';
 
-const ITEM_ID = 'oiaejidbmkiecgbjeifoejpgmdaleoha';
 const API = 'https://chromewebstore.googleapis.com';
 
 export const chromeEnv = [
   'CHROME_WEB_STORE_PUBLISHER_ID',
+  'CHROME_WEB_STORE_ITEM_ID',
   'CHROME_WEB_STORE_CLIENT_ID',
   'CHROME_WEB_STORE_CLIENT_SECRET',
   'CHROME_WEB_STORE_REFRESH_TOKEN',
@@ -43,7 +43,7 @@ const getAccessToken = async env => {
 export const uploadToChrome = async zipPath => {
   const env = requireEnv(chromeEnv);
   const headers = { Authorization: `Bearer ${await getAccessToken(env)}` };
-  const itemPath = `publishers/${env.CHROME_WEB_STORE_PUBLISHER_ID}/items/${ITEM_ID}`;
+  const itemPath = `publishers/${env.CHROME_WEB_STORE_PUBLISHER_ID}/items/${env.CHROME_WEB_STORE_ITEM_ID}`;
 
   const response = await fetch(`${API}/upload/v2/${itemPath}:upload`, {
     method: 'POST',

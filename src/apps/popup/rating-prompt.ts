@@ -13,11 +13,24 @@ export const MIN_DAYS_INSTALLED = 7;
 
 const DAY = 24 * 60 * 60 * 1000;
 
-const REVIEW_URLS = {
+/**
+ * The store page to send a rating to. The listing ids are not known until the
+ * first upload, so these search pages stand in until the release build sets
+ * the matching NOBADFONTS_*_REVIEW_URL variable.
+ */
+const configured = (name: string): string =>
+  typeof process === 'undefined' ? '' : (process.env[name] ?? '').trim();
+
+const REVIEW_URLS: Record<string, string> = {
   chrome:
-    'https://chromewebstore.google.com/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha/reviews',
-  edge: 'https://microsoftedge.microsoft.com/addons/detail/stylebot/mjolbpfednnbebfapicajpifliopnnai',
-  firefox: 'https://addons.mozilla.org/firefox/addon/stylebot-web/reviews/',
+    configured('NOBADFONTS_CHROME_REVIEW_URL') ||
+    'https://chromewebstore.google.com/search/NoBadFonts',
+  edge:
+    configured('NOBADFONTS_EDGE_REVIEW_URL') ||
+    'https://microsoftedge.microsoft.com/addons/search/NoBadFonts',
+  firefox:
+    configured('NOBADFONTS_FIREFOX_REVIEW_URL') ||
+    'https://addons.mozilla.org/firefox/search/?q=NoBadFonts',
 };
 
 export type RatingPromptState = {
@@ -30,7 +43,7 @@ export type RatingPromptState = {
 
 /**
  * Whether to ask for a rating: once, after enough styles saved over enough
- * days that the user has seen Stylebot work for them.
+ * days that the user has seen NoBadFonts work for them.
  */
 export const isEligibleForRatingPrompt = (
   {
@@ -48,7 +61,7 @@ export const isEligibleForRatingPrompt = (
   savedStyles >= MIN_SAVED_STYLES;
 
 /**
- * The store page to review Stylebot on in the running browser, or null
+ * The store page to review NoBadFonts on in the running browser, or null
  * where it isn't listed in a store with reviews, as in Safari.
  */
 export const getReviewUrl = (

@@ -89,30 +89,6 @@ describe('isEquivalentStyleMap with profiles', () => {
     ).toBe(false);
   });
 
-  it('tells styles apart when only a profile’s gallery listing differs', () => {
-    const listed = style('a { color: red; }', T1, {
-      profiles: {
-        default: { name: '' },
-        dark: {
-          name: 'Dark',
-          css: 'b {}',
-          galleryListing: {
-            styleId: 7,
-            slug: 'night',
-            version: 1,
-            cssHash: 'abc',
-            published: false,
-          },
-        },
-      },
-      activeProfile: 'default',
-    });
-
-    expect(isEquivalentStyleMap({ 'a.com': two }, { 'a.com': listed })).toBe(
-      false
-    );
-  });
-
   it('treats a style without profiles as its lone default profile', () => {
     expect(
       isEquivalentStyleMap({ 'a.com': plain }, { 'a.com': materialized })

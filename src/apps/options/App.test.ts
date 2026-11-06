@@ -20,7 +20,6 @@ const ACTIONS = [
   'getAllStyles',
   'getAllOptions',
   'getCommands',
-  'getGoogleDriveSyncMetadata',
   'saveStyle',
   'deleteStyle',
   'enableStyle',
@@ -40,8 +39,6 @@ const createStore = () =>
       } as Record<string, StyleWithoutUrl>,
       options: { ...defaultOptions, appearance: 'light' },
       commands: defaultCommands,
-      googleDriveSyncEnabled: false,
-      googleDriveSyncMetadata: undefined,
     },
     actions: {
       ...Object.fromEntries(ACTIONS.map(name => [name, jest.fn()])),
@@ -65,8 +62,8 @@ const createStore = () =>
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 beforeEach(() => {
-  // App subscribes to storage changes so background syncs refresh the page.
-  // The style editor asks for the gallery account, signed out here.
+  // App subscribes to storage changes so style writes refresh the page.
+  // The account tab asks for the account state, signed out here.
   global.chrome = {
     storage: { onChanged: { addListener: jest.fn() } },
     runtime: {

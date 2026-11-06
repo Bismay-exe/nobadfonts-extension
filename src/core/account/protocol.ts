@@ -65,13 +65,22 @@ const requestTokens = async (
   try {
     json = await response.json();
   } catch {
-    throw new AccountError('exchange-failed', `HTTP ${response.status}`);
+    throw new AccountError('exchange-failed', `HTTP ${response.status}`, {
+      httpStatus: response.status,
+    });
+  }
+
+  if (!json || typeof json !== 'object') {
+    throw new AccountError('exchange-failed', `HTTP ${response.status}`, {
+      httpStatus: response.status,
+    });
   }
 
   if (!response.ok || json.error) {
     throw new AccountError(
       'exchange-failed',
-      json.error_description ?? json.error ?? `HTTP ${response.status}`
+      json.error_description ?? json.error ?? `HTTP ${response.status}`,
+      { oauthError: json.error, httpStatus: response.status }
     );
   }
 

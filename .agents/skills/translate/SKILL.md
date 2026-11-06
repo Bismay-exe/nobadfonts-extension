@@ -1,17 +1,16 @@
 ---
 name: translate
-description: Translate the Stylebot extension's locale strings — fill in strings that English has and other locales lack, retranslate English strings that changed, or add a whole new locale (e.g. "/translate add vi"). Use after adding or changing any string in src/assets/_locales/en.config, when `yarn validate-locales` reports missing translations, or when the user asks to add or improve a language.
+description: Translate the NoBadFonts extension's locale strings — fill in strings that English has and other locales lack, retranslate English strings that changed, or add a whole new locale (e.g. "/translate add vi"). Use after adding or changing any string in src/assets/_locales/en.config, when `yarn validate-locales` reports missing translations, or when the user asks to add or improve a language.
 ---
 
-# Translate Stylebot
+# Translate NoBadFonts
 
-Stylebot's UI strings live in `src/assets/_locales/<locale>.config`, one file per
+NoBadFonts's UI strings live in `src/assets/_locales/<locale>.config`, one file per
 locale; `en.config` is the source. CI's `yarn validate-locales` fails while any
 string English has is missing from another locale, so every string needs every
 locale. This skill is how they get filled in.
 
-The website, stylebot.dev, is its own repo (github.com/ankit/stylebot-site), with
-its own translate skill.
+The website is its own repo, with its own translate skill.
 
 ## The file format
 
@@ -103,7 +102,7 @@ meaning, then let the language's own grammar and word order carry it.
   Chinese "一个") unless something is being counted.
 - **Name the subject.** English "it" for a feature or "you" in every sentence
   sounds foreign in many languages. Restructure, or name the thing ("this
-  feature", "AI", "Stylebot").
+  feature", "AI", "NoBadFonts").
 - **Feature names aren't sentence subjects** unless that's natural in the
   language: "Sync keeps your styles in Drive" becomes "this feature keeps…", not
   the tab label used as a noun.
@@ -135,20 +134,20 @@ breaks it, bring it in line):
 
 ## Glossary
 
-Never translated: Stylebot, CSS, HTML, URL, Google Drive, Google Fonts,
+Never translated: NoBadFonts, CSS, HTML, URL, Google Fonts,
 Claude, Gemini, OpenAI, model names (Sonnet 5, GPT-5.6 Luna…), keyboard keys
 (Esc, Alt, Shift, ⌘).
 
 Keep the meaning, translate the word:
 
-| English | Meaning in Stylebot |
+| English | Meaning in NoBadFonts |
 |---|---|
 | style | the CSS a user saved for one site (noun) |
-| styling | Stylebot's CSS being applied on a page |
+| styling | NoBadFonts's CSS being applied on a page |
 | selector | a CSS selector, as in CSS documentation in that language |
 | preset | a ready-made set of styles (dark mode, grayscale…) |
 | readability / reader | the reading view that strips a page to its article |
-| panel / editor | Stylebot's side panel where styles are edited |
+| panel / editor | NoBadFonts's side panel where styles are edited |
 | Light / Dark / Sepia / System | theme names, as the OS or browser names its themes |
 | provider | an AI company whose API key the user adds |
 

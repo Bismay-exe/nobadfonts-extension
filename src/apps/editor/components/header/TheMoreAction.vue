@@ -43,8 +43,6 @@
 
         <s-menu-divider class="more-menu-divider" />
 
-        <the-gallery-menu-item v-if="hasCss" @click="close()" />
-
         <s-menu-item
           @click="
             keyboardShortcuts();
@@ -102,7 +100,6 @@ import type {
 import { openOptionsPage } from '@stylebot/utils';
 
 import { hasSidePanel } from '../../utils/side-panel';
-import TheGalleryMenuItem from './TheGalleryMenuItem.vue';
 
 type DockOption = {
   value: StylebotDockLocation;
@@ -130,14 +127,9 @@ export default Vue.extend({
     SunIcon,
     MoonIcon,
     MonitorIcon,
-    TheGalleryMenuItem,
   },
 
   computed: {
-    hasCss(): boolean {
-      return Boolean(this.$store.state.css.trim());
-    },
-
     layout(): StylebotLayout {
       return this.$store.state.options.layout;
     },
@@ -217,7 +209,6 @@ export default Vue.extend({
   methods: {
     onOpen(): void {
       this.$store.commit('setInspecting', false);
-      this.$store.dispatch('loadPublishedGalleryStyle');
     },
 
     dock(dockLocation: StylebotDockLocation): void {

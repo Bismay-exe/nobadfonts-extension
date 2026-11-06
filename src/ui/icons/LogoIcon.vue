@@ -4,7 +4,7 @@
     :width="size"
     :height="(size * 24) / 28"
     role="img"
-    aria-label="Stylebot"
+    aria-label="NoBadFonts"
   >
     <rect width="24" height="5" rx="2.5" fill="#ec4d86" />
     <rect y="8.5" width="15" height="5" rx="2.5" fill="#1c9fc4" />
@@ -17,7 +17,7 @@
 import Vue from 'vue';
 
 /**
- * Stylebot's mark: three bars of styled text and the caret after them.
+ * NoBadFonts's mark: three bars of styled text and the caret after them.
  */
 export default Vue.extend({
   name: 'LogoIcon',

@@ -1,11 +1,7 @@
 import type { StyleMap, StyleWithoutUrl } from '@stylebot/types';
 
 import { isForceImportant } from './force-important';
-import {
-  expandProfiles,
-  hasSameUnknownFields,
-  isSameGalleryListing,
-} from './profiles';
+import { expandProfiles, hasSameUnknownFields } from './profiles';
 
 /**
  * Whitespace-insensitive view of a stylesheet, so reformatting on one device
@@ -27,9 +23,8 @@ type EquivalenceOptions = { ignoreActiveProfile?: boolean };
 
 /**
  * Whether both styles have the same profiles, the same one active, and each
- * profile the same name, css, gallery listing and fields this version doesn't
- * know. A style without profiles matches one whose only profile is the
- * unnamed default.
+ * profile the same name, css and fields this version doesn't know. A style
+ * without profiles matches one whose only profile is the unnamed default.
  */
 const hasEquivalentProfiles = (
   a: StyleWithoutUrl,
@@ -51,7 +46,6 @@ const hasEquivalentProfiles = (
         !!sheetB &&
         sheetA.name === sheetB.name &&
         normalizeCss(sheetA.css) === normalizeCss(sheetB.css) &&
-        isSameGalleryListing(sheetA.galleryListing, sheetB.galleryListing) &&
         hasSameUnknownFields(sheetA, sheetB)
       );
     })

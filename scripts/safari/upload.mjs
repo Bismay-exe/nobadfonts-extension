@@ -15,10 +15,9 @@ if (process.platform !== 'darwin') {
   process.exit(1);
 }
 
-if (!process.env.STYLEBOT_GOOGLE_CLIENT_SECRET) {
+if (!process.env.NOBADFONTS_OAUTH_CLIENT_ID) {
   console.error(
-    'Set STYLEBOT_GOOGLE_CLIENT_SECRET to the Desktop OAuth client secret; ' +
-      'Drive sign-in needs it.'
+    'Set NOBADFONTS_OAUTH_CLIENT_ID to the OAuth client id; account sign-in needs it.'
   );
   process.exit(1);
 }

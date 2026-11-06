@@ -3,7 +3,6 @@ import CommandsToBrowser from './commands-to-browser';
 import DefaultShortcutUpdate from './default-shortcut-update';
 import StylesMetadataUpdate from './styles-metadata-update';
 import StylesModifiedTimeUpdate from './styles-modified-time-update';
-import SyncStorageUpdate from './sync-storage-update';
 
 export const MIGRATION_ERRORS_KEY = 'migration_errors';
 
@@ -36,7 +35,6 @@ export const migrations: Array<Migration> = [
     run: StylesModifiedTimeUpdate,
     everyStart: true,
   },
-  { name: 'sync-storage-update', run: SyncStorageUpdate },
   { name: 'chat-removal', run: ChatRemoval },
 ];
 

@@ -119,14 +119,6 @@
       </s-anchored-menu>
     </div>
 
-    <gallery-status
-      v-if="selectedListing"
-      :listing="selectedListing"
-      :css="expanded.sheets[selectedProfile].css"
-      :url="initialUrl"
-      :profile-id="selectedProfile"
-    />
-
     <div class="editor-code-area">
       <code-editor
         :key="selectedProfile"
@@ -220,7 +212,7 @@
 import Vue from 'vue';
 import type { NavigationGuardNext, Route } from 'vue-router';
 
-import type { GalleryListing, StyleWithoutUrl } from '@stylebot/types';
+import type { StyleWithoutUrl } from '@stylebot/types';
 import {
   SAnchoredMenu,
   SButton,
@@ -239,7 +231,6 @@ import type { ExpandedProfiles } from '@stylebot/saved-styles';
 import { isSaveShortcut } from '@stylebot/utils';
 
 import SiteIcon from '../site/SiteIcon.vue';
-import GalleryStatus from './GalleryStatus.vue';
 import StyleRowMenu from './StyleRowMenu.vue';
 import CodeEditor from './CodeEditor.vue';
 import IconMenuTrigger from '../IconMenuTrigger.vue';
@@ -256,7 +247,6 @@ export default Vue.extend({
     ChevronLeftIcon,
     PlusIcon,
     SiteIcon,
-    GalleryStatus,
     SText,
     SButton,
     SAnchoredMenu,
@@ -342,16 +332,7 @@ export default Vue.extend({
     },
 
     profileIds(): Array<string> {
-      const ids = Object.keys(this.expanded.sheets);
-
-      return [
-        ...ids.filter(id => !this.isInGallery(id)),
-        ...ids.filter(id => this.isInGallery(id)),
-      ];
-    },
-
-    selectedListing(): GalleryListing | undefined {
-      return this.expanded.sheets[this.selectedProfile]?.galleryListing;
+      return Object.keys(this.expanded.sheets);
     },
 
     selectedName(): string {
@@ -545,10 +526,6 @@ export default Vue.extend({
 
     profileName(id: string): string {
       return this.expanded.sheets[id]?.name || this.t('profile_default_name');
-    },
-
-    isInGallery(id: string): boolean {
-      return !!this.expanded.sheets[id]?.galleryListing;
     },
 
     validateProfileName(name: string): string {

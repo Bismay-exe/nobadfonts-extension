@@ -20,38 +20,26 @@ The applied profile's CSS stays in the style's `css`, exactly where a style with
 }
 ```
 
-Keeping the applied CSS in `css` means everything that compiles, injects and caches styles reads it as before, so applying a profile costs nothing, and a version of Stylebot from before profiles still sees a working style.
+Keeping the applied CSS in `css` means everything that compiles, injects and caches styles reads it as before, so applying a profile costs nothing, and an older NoBadFonts release still sees a working style.
 
 - **No profiles** means one unnamed profile, `default`, shown as "Default". Existing styles need no migration.
 - **The applied profile's CSS lives only in `css`.** Its entry in `profiles` holds just its name.
-- **Once a style has profiles, the field stays**, even when only one is left. A style that loses it was saved by an older Stylebot, which sync uses (below).
-- **Ids are random**, apart from `default`. Names are unique within a style, ignoring case, though a sync merge can produce two with the same name.
+- **Once a style has profiles, the field stays**, even when only one is left. A style that loses it was saved by an older release.
+- **Ids are random**, apart from `default`. Names are unique within a style, ignoring case.
 - **Order** is the default profile first, then the order profiles were added in, so renaming one doesn't move it. Each profile records when it was added, since browser storage doesn't keep the order keys were added in. Profiles from before that was recorded come first, by name.
 - **Per style, not per profile:** on/off, Readability and Override site styles.
 
-A style map read from outside the extension, an imported backup or the synced file, has its profiles repaired before use: entries without a name are dropped, an unknown applied id falls back to a profile, and any CSS stored against the applied profile is discarded in favour of `css`.
+A style map read from outside the extension or from an imported backup has its profiles repaired before use: entries without a name are dropped, an unknown applied id falls back to a profile, and any CSS stored against the applied profile is discarded in favour of `css`.
 
 ## Saving and switching
 
 - **Edits name the profile they're for.** The editor saves to the profile it's showing, so if another tab or the popup switches profiles mid-edit, the edit still lands where it was made.
-- **A switch stays on this device.** It isn't an edit, so sync leaves it out, and it doesn't make this device's copy the newer one in a merge.
+- **A switch stays on this device.** It isn't an edit, so a backup exports only the applied profile's content.
 - **A switch reaches every open tab**, as turning a style on or off does. The editor's undo history starts over, since undoing past a switch would write one profile's CSS into another.
 - **A style is deleted only once no profile has CSS.** A blank applied profile keeps the style, and it stays listed in the popup so it can be switched back.
 - **The options page can edit a profile without applying it.** Its tabs open any profile; making one the applied profile is a separate action.
 
 Users switch profiles from the editor's header, the popup and the options page, and create, rename, duplicate and delete them from the editor and the options page.
-
-## Sync
-
-Profiles merge one by one, with the same rules as the styles they belong to (see [Sync](sync.md)):
-
-- A profile changed on one side takes that side; one edited on both merges its CSS with the line-level diff3, conflicts and all.
-- A rename made on one side wins; when both sides renamed, the newer edit does.
-- **Each device keeps its applied profile.** A merge only picks one for a style new to the device, or when the applied profile was deleted.
-- **A profile is deleted only when the copy that deleted it is the newer edit of the style.** An older copy missing a profile is more likely stale than deliberate, so the profile is kept.
-- **A copy from an older Stylebot** has lost its profiles. The merge gives them back from the base, treating that copy's `css` as an edit to the applied profile.
-
-One case can still remove a style everywhere: on an older Stylebot, clearing all the CSS of a style whose applied profile is blank deletes the style, and sync carries the deletion. Version history keeps it, so it can be restored.
 
 ## Version history, import and export
 

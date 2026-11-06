@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Stylebot",
-  "version": "4.0.5",
-  "author": "Ankit Ahuja",
+  "name": "NoBadFonts",
+  "version": "1.0.0",
+  "author": "NoBadFonts",
   "description": "__MSG_extension_description__",
   "default_locale": "en",
   "background": {
@@ -26,11 +26,6 @@
       "matches": ["<all_urls>"],
       "exclude_matches": ["*://*/*.xml"],
       "run_at": "document_start"
-    },
-    {
-      "js": ["site-bridge/index.js"],
-      "matches": ["https://stylebot.dev/*", "https://gallery.stylebot.dev/*"],
-      "run_at": "document_start"
     }
   ],
   "action": {
@@ -39,7 +34,7 @@
       "24": "img/icon24.png",
       "32": "img/icon32.png"
     },
-    "default_title": "Stylebot",
+    "default_title": "NoBadFonts",
     "default_popup": "popup/index.html"
   },
   "icons": {
@@ -63,17 +58,8 @@
       "description": "__MSG_toggle_grayscale__"
     }
   },
-  "permissions": [
-    "tabs",
-    "storage",
-    "contextMenus",
-    "unlimitedStorage",
-    "alarms",
-    "idle"
-  ],
+  "permissions": ["tabs", "storage", "contextMenus", "unlimitedStorage"],
   "host_permissions": [
-    "https://drive.google.com/*",
-    "https://www.googleapis.com/*",
     "https://fonts.googleapis.com/*",
     "https://www.nobadfonts.in/*",
     "https://wcegdxhvgwbeskaidlxr.supabase.co/*"
@@ -84,8 +70,6 @@
         "monaco-editor/*",
         "editor/app.js",
         "editor/app.css",
-        "gallery-preview/index.js",
-        "gallery-preview/index.css",
         "fonts/*",
         "readability/reader.js",
         "readability/reader.css",

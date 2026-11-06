@@ -1,16 +1,12 @@
 import { getGoodbyeUrl, isMajorUpdate } from './release';
 
-jest.mock('@stylebot/i18n', () => ({ t: () => 'de' }));
-
 describe('getGoodbyeUrl', () => {
-  it('passes the extension version to the goodbye page', () => {
+  it('points at the site', () => {
     global.chrome = {
-      runtime: { getManifest: () => ({ version: '4.1.0' }) },
+      runtime: { getManifest: () => ({ version: '1.0.0' }) },
     } as unknown as typeof chrome;
 
-    expect(getGoodbyeUrl()).toBe(
-      'https://stylebot.dev/de/goodbye?version=4.1.0'
-    );
+    expect(getGoodbyeUrl()).toBe('https://www.nobadfonts.in/');
   });
 });
 

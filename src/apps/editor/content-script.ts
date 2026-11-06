@@ -13,7 +13,6 @@ import { REMOTE_PAGE_BRIDGE_PORT } from '@stylebot/page-bridge';
 import { initPageShortcuts } from './page-shortcuts';
 import type { EditorApp } from './load-editor';
 import { isEditorLoading, loadEditor } from './load-editor';
-import { loadInspector } from './load-inspector';
 import { whenDomReady } from './utils/dom-ready';
 import { getIsEditorWindowOpen, getStylesForPage } from './utils/chrome';
 
@@ -99,21 +98,6 @@ const listen = (): void => {
     (message: TabMessage, _, sendResponse: (response: unknown) => void) => {
       if (window !== window.top) {
         return;
-      }
-
-      // supportsCLI() inlined, since its module would load on every page.
-      if (
-        process.env.STYLEBOT_CLI === 'true' &&
-        message.name === 'InspectPage'
-      ) {
-        whenDomReady(() =>
-          loadInspector()
-            .then(inspectPage =>
-              inspectPage(message.inspection, { reapplySavedStyles })
-            )
-            .then(sendResponse, error => sendResponse({ error: String(error) }))
-        );
-        return true;
       }
 
       // A global shortcut, which the browser catches wherever focus is.

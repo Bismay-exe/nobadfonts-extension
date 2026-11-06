@@ -12,15 +12,15 @@ function show(state, messages) {
   setText('.description', t('extension_description'));
   setText(
     '.state-on',
-    t('stylebot_is_on_turn_it_off_in_safari_settings_extensions')
+    t('nobadfonts_is_on_turn_it_off_in_safari_settings_extensions')
   );
   setText(
     '.state-off',
-    t('stylebot_is_off_turn_it_on_in_safari_settings_extensions')
+    t('nobadfonts_is_off_turn_it_on_in_safari_settings_extensions')
   );
   setText(
     '.state-unknown',
-    t('turn_on_stylebot_in_safari_settings_extensions')
+    t('turn_on_nobadfonts_in_safari_settings_extensions')
   );
   setText('.open-preferences', t('quit_and_open_safari_settings'));
   document.body.classList.add(`state-${state}`);

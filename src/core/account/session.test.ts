@@ -71,6 +71,23 @@ const tokenReply = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const deferred = () => {
+  let resolve!: () => void;
+  const promise = new Promise<void>(done => {
+    resolve = done;
+  });
+
+  return { promise, resolve };
+};
+
+const waitForCalls = async (count: number): Promise<void> => {
+  for (let i = 0; i < 100 && fetchMock.mock.calls.length < count; i++) {
+    await Promise.resolve();
+  }
+
+  expect(fetchMock).toHaveBeenCalledTimes(count);
+};
+
 /**
  * Answers launchWebAuthFlow the way the browser does, echoing the state back
  * with a code so the flow can finish.
@@ -186,6 +203,74 @@ describe('getAccount', () => {
   it('keeps the session when the renewal cannot reach the server', async () => {
     const store = createStore(session({ expiresAt: NOW + 30_000 }));
     fetchMock.mockRejectOnce(new Error('offline'));
+    fetchMock.mockRejectOnce(new Error('offline'));
+
+    await expect(getAccount(deps(store))).resolves.toMatchObject({
+      status: 'signed-in',
+      expiresAt: NOW + 30_000,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(store.clear).not.toHaveBeenCalled();
+    expect(store.write).not.toHaveBeenCalled();
+  });
+
+  it('recovers when a lost reply is retried', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    fetchMock.mockRejectOnce(new Error('offline'));
+    fetchMock.mockResponseOnce(
+      JSON.stringify({
+        access_token: 'new-access-token',
+        refresh_token: 'rotated-token',
+        expires_in: 3600,
+      })
+    );
+
+    await expect(getAccount(deps(store))).resolves.toMatchObject({
+      status: 'signed-in',
+      expiresAt: NOW + 3_600_000,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(
+      new URLSearchParams(String(fetchMock.mock.calls[1][1]?.body)).get(
+        'refresh_token'
+      )
+    ).toBe('refresh-token');
+    expect(store.current()).toMatchObject({
+      accessToken: 'new-access-token',
+      refreshToken: 'rotated-token',
+    });
+  });
+
+  it('keeps the session when the server fails without an OAuth code', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    fetchMock.mockResponseOnce(JSON.stringify({ message: 'unavailable' }), {
+      status: 503,
+    });
+
+    await expect(getAccount(deps(store))).resolves.toMatchObject({
+      status: 'signed-in',
+      expiresAt: NOW + 30_000,
+    });
+    expect(store.clear).not.toHaveBeenCalled();
+    expect(store.write).not.toHaveBeenCalled();
+  });
+
+  it('keeps the session on an OAuth error other than invalid_grant', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    fetchMock.mockResponseOnce(JSON.stringify({ error: 'invalid_request' }), {
+      status: 400,
+    });
+
+    await expect(getAccount(deps(store))).resolves.toMatchObject({
+      status: 'signed-in',
+      expiresAt: NOW + 30_000,
+    });
+    expect(store.clear).not.toHaveBeenCalled();
+  });
+
+  it('keeps the session when a refresh reply has no access token', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    fetchMock.mockResponseOnce(JSON.stringify({ refresh_token: 'rotated' }));
 
     await expect(getAccount(deps(store))).resolves.toMatchObject({
       status: 'signed-in',
@@ -204,6 +289,67 @@ describe('getAccount', () => {
     await expect(getAccount(deps(store))).resolves.toEqual({
       status: 'signed-out',
     });
+    expect(store.clear).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes once for callers that arrive together', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    const gate = deferred();
+    fetchMock.mockResponseOnce(async () => {
+      await gate.promise;
+      return JSON.stringify({
+        access_token: 'new-access-token',
+        refresh_token: 'rotated-token',
+        expires_in: 3600,
+      });
+    });
+
+    const first = getAccount(deps(store));
+    await waitForCalls(1);
+    const second = getAccount(deps(store));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    gate.resolve();
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      expect.objectContaining({
+        status: 'signed-in',
+        expiresAt: NOW + 3_600_000,
+      }),
+      expect.objectContaining({
+        status: 'signed-in',
+        expiresAt: NOW + 3_600_000,
+      }),
+    ]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(store.write).toHaveBeenCalledTimes(1);
+    expect(store.current()).toMatchObject({
+      accessToken: 'new-access-token',
+      refreshToken: 'rotated-token',
+    });
+  });
+
+  it('clears after a sign-out that lands during a refresh', async () => {
+    const store = createStore(session({ expiresAt: NOW + 30_000 }));
+    const gate = deferred();
+    fetchMock.mockResponseOnce(async () => {
+      await gate.promise;
+      return JSON.stringify({
+        access_token: 'new-access-token',
+        refresh_token: 'rotated-token',
+        expires_in: 3600,
+      });
+    });
+
+    const account = getAccount(deps(store));
+    await waitForCalls(1);
+    const out = signOut(deps(store));
+    gate.resolve();
+    await Promise.all([account, out]);
+
+    expect(store.current()).toBeNull();
     expect(store.clear).toHaveBeenCalledTimes(1);
   });
 });
@@ -239,6 +385,22 @@ describe('signIn', () => {
 
     await expect(signIn(deps(store, { launch }))).rejects.toMatchObject({
       code: 'state-mismatch',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(store.write).not.toHaveBeenCalled();
+  });
+
+  it('refuses a redirect to another address', async () => {
+    const store = createStore();
+    const launch = jest.fn(async (url: string) => {
+      const state = new URL(url).searchParams.get('state') ?? '';
+
+      return `https://attacker.example/?code=code-1&state=${state}`;
+    });
+
+    await expect(signIn(deps(store, { launch }))).rejects.toMatchObject({
+      code: 'exchange-failed',
+      message: 'The sign-in returned to another address',
     });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(store.write).not.toHaveBeenCalled();

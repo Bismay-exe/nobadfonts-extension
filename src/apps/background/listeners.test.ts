@@ -12,33 +12,14 @@ jest.mock('./editor-window', () => ({
   forgetWindow: jest.fn(),
 }));
 jest.mock('./messages', () => ({}));
-jest.mock('./gallery-preview', () => ({
-  endGalleryPreview: jest.fn(),
-  endGalleryPreviewOffSite: jest.fn(),
-  syncGalleryPreviewSites: jest.fn(),
-}));
 jest.mock('./restore-tabs', () => ({
   restoreOpenTabs: jest.fn(),
   restoreTab: jest.fn(async () => undefined),
 }));
-jest.mock('./badge', () => ({ updateBadge: jest.fn() }));
 jest.mock('./options', () => ({ get: jest.fn(), pruneRetired: jest.fn() }));
 jest.mock('./side-panel', () => ({
   initSidePanel: jest.fn(),
   onEditorSidePanelOpened: jest.fn(),
-}));
-jest.mock('./sync-scheduler', () => ({
-  AWAY_SECONDS: 60,
-  isSyncAlarm: jest.fn(),
-  updatePeriodicSync: jest.fn(),
-}));
-jest.mock('@stylebot/sync', () => ({
-  runGoogleDriveSync: jest.fn(),
-  getGoogleDriveSyncEnabled: jest.fn(),
-  SYNC_ISSUE_KEYS: [],
-}));
-jest.mock('@stylebot/google-auth', () => ({
-  isSignInRedirect: () => false,
 }));
 
 import { ContextMenu } from './contextmenu';
@@ -79,7 +60,6 @@ const makeChrome = (version: string) => {
     windows: { onRemoved: event() },
     commands: { onCommand: event() },
     alarms: { onAlarm: event() },
-    idle: undefined,
     storage: {
       local: {
         get: jest.fn(async () => ({})),
@@ -110,7 +90,7 @@ describe('onInstalled', () => {
 
     expect(pruneRetired).toBeCalled();
     expect(api.tabs.create).toBeCalledWith({
-      url: 'https://stylebot.dev/releases/4.0',
+      url: 'https://www.nobadfonts.in/docs',
       active: false,
     });
     expect(api.storage.local.set).toBeCalledWith({
@@ -162,7 +142,7 @@ describe('onInstalled', () => {
 
     expect(api.tabs.create).toBeCalledTimes(1);
     expect(api.tabs.create).toBeCalledWith({
-      url: 'https://stylebot.dev/welcome',
+      url: 'https://www.nobadfonts.in/',
     });
     expect(restoreOpenTabs).not.toBeCalled();
   });

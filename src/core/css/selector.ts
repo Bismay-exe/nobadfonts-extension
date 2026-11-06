@@ -1,5 +1,4 @@
 import { queryWithShadowRoots } from '@stylebot/stylesheets';
-import type { FragileSelector } from '@stylebot/types';
 import { splitCommaList } from '@stylebot/utils';
 
 import { getSubjectCompound } from './get-subject-compound';
@@ -250,37 +249,6 @@ const replaceClasses = (
  */
 export const getStableSelector = (selector: string): string =>
   replaceClasses(selector, className => getStableClassMatcher(className));
-
-/**
- * The selector's generated class names, which change when the site rebuilds,
- * with a version that matches the partly generated ones by their stable
- * parts; null when it has none. Minified names, kept across releases, pass.
- */
-export const getFragileSelector = (
-  selector: string
-): FragileSelector | null => {
-  const hashed: Array<string> = [];
-
-  replaceClasses(selector, className => {
-    if (looksHashed(className) && !looksMinified(className)) {
-      hashed.push(className);
-    }
-
-    return null;
-  });
-
-  if (!hashed.length) {
-    return null;
-  }
-
-  const stable = getStableSelector(selector);
-
-  return {
-    selector,
-    stable: stable === selector ? null : stable,
-    unstable: hashed.filter(className => !getStableClassMatcher(className)),
-  };
-};
 
 export const getIdBasedSelector = (el: HTMLElement): string | null => {
   const id = el.getAttribute('id');

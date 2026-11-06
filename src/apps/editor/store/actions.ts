@@ -36,17 +36,7 @@ import type {
   StylebotLayout,
   StylebotDockLocation,
   StylebotAppearance,
-  GalleryScreenshotResponse,
-  ResetGalleryProfileResponse,
 } from '@stylebot/types';
-
-import {
-  captureGalleryScreenshot,
-  getPublishedGalleryStyle,
-  openGalleryDraft,
-  resetGalleryProfile,
-} from '../utils/gallery';
-import { waitForPanelToSlideAway } from '../utils/panel-slide';
 
 import {
   getAllOptions,
@@ -279,116 +269,6 @@ export default {
     }
 
     dispatch('closeStylebot');
-  },
-
-  /**
-   * Captures the styled page for the gallery, as taken. In the page itself,
-   * the panel slides away so the page is captured at its full width, then
-   * comes back.
-   */
-  async captureGalleryScreenshot({
-    state,
-    commit,
-  }: {
-    state: State;
-    commit: Commit;
-  }): Promise<GalleryScreenshotResponse> {
-    if (state.host !== 'page') {
-      return captureGalleryScreenshot(state.tabId ?? undefined);
-    }
-
-    commit('setCapturing', true);
-
-    try {
-      await waitForPanelToSlideAway();
-
-      return await captureGalleryScreenshot();
-    } finally {
-      commit('setCapturing', false);
-    }
-  },
-
-  /**
-   * Captures the page and hands the active profile to the gallery site to
-   * publish, in a new tab. Without a screenshot, the site asks for one.
-   */
-  async publishToGallery({
-    state,
-    getters,
-    commit,
-    dispatch,
-  }: {
-    state: State;
-    getters: Getters;
-    commit: Commit;
-    dispatch: Dispatch;
-  }): Promise<void> {
-    if (state.publishing) {
-      return;
-    }
-
-    commit('setPublishing', true);
-    commit('setInspecting', false);
-
-    try {
-      const capture: GalleryScreenshotResponse = await dispatch(
-        'captureGalleryScreenshot'
-      );
-
-      await openGalleryDraft({
-        url: state.url,
-        profileId: state.activeProfile,
-        css: removeEmptyRules(state.css),
-        profileName: getters.activeProfileName,
-        screenshot: capture.ok ? capture.screenshot : null,
-      });
-    } finally {
-      commit('setPublishing', false);
-    }
-  },
-
-  async loadPublishedGalleryStyle({
-    state,
-    commit,
-  }: {
-    state: State;
-    commit: Commit;
-  }): Promise<void> {
-    const { published, installed } = await getPublishedGalleryStyle(
-      state.url,
-      state.activeProfile
-    );
-
-    commit('setPublishedGalleryStyle', published);
-    commit('setInstalledGalleryStyle', installed);
-  },
-
-  /**
-   * Puts the gallery version back in place of the user's edits, as an undo
-   * step. The background's push of the saved styles brings the css in.
-   */
-  async resetToGalleryVersion({
-    state,
-    commit,
-  }: {
-    state: State;
-    commit: Commit;
-  }): Promise<ResetGalleryProfileResponse> {
-    const { url, activeProfile, css } = state;
-    const response = await resetGalleryProfile(url, activeProfile);
-
-    // Undoing past a profile switch would write one profile's css into another.
-    const sameProfile =
-      state.url === url && state.activeProfile === activeProfile;
-
-    if (response.ok && sameProfile) {
-      commit(
-        'setUndoStack',
-        recordChange(state.undoStack, css, 'gallery-reset', Date.now(), 'never')
-      );
-    }
-
-    return response;
   },
 
   setMode(

@@ -1,12 +1,12 @@
 ---
 name: Feature request
-about: Suggest an idea for Stylebot
+about: Suggest an idea for NoBadFonts
 title: '[Feature]'
 labels: Feature
 assignees: ''
 ---
 
-<!-- Thank you for taking the time to suggest a feature for Stylebot -->
+<!-- Thank you for taking the time to suggest a feature for NoBadFonts -->
 
 ### Is your feature request related to a problem? Please describe.
 

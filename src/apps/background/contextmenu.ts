@@ -56,7 +56,7 @@ export const ContextMenu = {
   create(): void {
     chrome.contextMenus.create({
       id: CONTEXT_MENU_ID,
-      title: 'Stylebot',
+      title: 'NoBadFonts',
       contexts: ['all'],
     });
 

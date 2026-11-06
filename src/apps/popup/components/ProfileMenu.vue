@@ -10,9 +10,6 @@
     <template v-if="!confirming">
       <s-menu-item @click="$emit('edit')">{{ t('edit') }}</s-menu-item>
       <s-menu-item @click="$emit('rename')">{{ t('rename') }}</s-menu-item>
-      <s-menu-item v-if="publishItem" @click="$emit('publish')">
-        {{ t(publishItem.label) }}
-      </s-menu-item>
       <s-menu-divider />
       <s-menu-item danger @click="startConfirm">{{ t('delete') }}</s-menu-item>
     </template>
@@ -34,11 +31,8 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from 'vue';
 import Vue from 'vue';
 import { SButton, SMenu, SMenuDivider, SMenuItem } from '@stylebot/components';
-
-import type { GalleryMenuItem } from '@stylebot/gallery';
 
 // Room left below the menu once the popup grows to fit it.
 const MENU_MARGIN = 8;
@@ -62,12 +56,6 @@ export default Vue.extend({
   props: {
     // Deleting the style's only profile deletes the style.
     deletesStyle: Boolean,
-
-    // Publishing to the Gallery, where the profile can be.
-    publishItem: {
-      type: Object as PropType<GalleryMenuItem | null>,
-      default: null,
-    },
   },
 
   data(): { confirming: boolean; POPUP_MAX_HEIGHT: number } {

@@ -9,7 +9,6 @@ import {
   doesSidePanelWorkInChromiumVariant,
 } from '@stylebot/utils';
 
-import initGalleryListener from '../listeners/gallery';
 import { openEditorWindow } from '../utils/chrome';
 import { initWindowListeners, initTabInfo } from './listeners';
 
@@ -25,7 +24,7 @@ const renderUnavailable = (): void => {
   const app = document.getElementById('app');
   if (app) {
     app.className = 'editor-window-unavailable';
-    app.textContent = t('stylebot_cant_style_this_page');
+    app.textContent = t('nobadfonts_cant_style_this_page');
   }
 };
 
@@ -91,7 +90,6 @@ const start = async (): Promise<void> => {
   }
 
   initTabInfo(store, tabId);
-  initGalleryListener(store);
 
   await bridge.connect();
   await store.dispatch('initialize');

@@ -8,7 +8,6 @@ import * as noBadFonts from '@stylebot/no-bad-fonts';
 import type { NoBadFontsChoice } from '@stylebot/no-bad-fonts';
 import * as chromeUtils from '../utils/chrome';
 import * as page from '@stylebot/page-bridge';
-import * as galleryUtils from '../utils/gallery';
 
 jest.mock('postcss');
 jest.mock('@stylebot/css');
@@ -16,7 +15,6 @@ jest.mock('@stylebot/google-fonts');
 jest.mock('@stylebot/no-bad-fonts');
 jest.mock('../utils/chrome');
 jest.mock('@stylebot/page-bridge');
-jest.mock('../utils/gallery');
 
 const mockRoot = {
   some: jest.fn(),
@@ -1047,104 +1045,6 @@ describe('actions', () => {
       expect(mockCommit).toBeCalledWith('setComputedStyles', {
         'font-size': '20px',
       });
-    });
-  });
-
-  describe('publishToGallery', () => {
-    const publish = (capture: unknown) => {
-      jest
-        .mocked(stylebotCss.removeEmptyRules)
-        .mockImplementation(css => css.replace(/\s*b \{\s*\}/, ''));
-      const dispatch = jest.fn(async () => capture);
-
-      return actions
-        .publishToGallery({
-          state: { ...mockState, css: 'a { color: red; }\nb {}' },
-          getters: { activeProfileName: 'Dark' } as never,
-          commit: mockCommit,
-          dispatch,
-        })
-        .then(() => dispatch);
-    };
-
-    it('captures the page and hands the profile, as saved, and screenshot to the gallery site', async () => {
-      const dispatch = await publish({ ok: true, screenshot: 'data:a' });
-
-      expect(dispatch).toHaveBeenCalledWith('captureGalleryScreenshot');
-      expect(galleryUtils.openGalleryDraft).toHaveBeenCalledWith({
-        url: mockState.url,
-        profileId: mockState.activeProfile,
-        css: 'a { color: red; }',
-        profileName: 'Dark',
-        screenshot: 'data:a',
-      });
-      expect(mockCommit).toHaveBeenCalledWith('setInspecting', false);
-      expect(mockCommit).toHaveBeenLastCalledWith('setPublishing', false);
-    });
-
-    it('hands it over without a screenshot when the capture fails', async () => {
-      await publish({ ok: false, errorKey: 'gallery_error_unknown' });
-
-      expect(galleryUtils.openGalleryDraft).toHaveBeenCalledWith(
-        expect.objectContaining({ screenshot: null })
-      );
-    });
-  });
-  describe('resetToGalleryVersion', () => {
-    const edited = { ...mockState, css: 'a { color: blue; }' };
-
-    it('records the edits as an undo step once the gallery version is back', async () => {
-      jest
-        .mocked(galleryUtils.resetGalleryProfile)
-        .mockResolvedValue({ ok: true });
-
-      await actions.resetToGalleryVersion({
-        state: edited,
-        commit: mockCommit,
-      });
-
-      expect(galleryUtils.resetGalleryProfile).toHaveBeenCalledWith(
-        edited.url,
-        edited.activeProfile
-      );
-      expect(mockCommit).toHaveBeenCalledWith('setUndoStack', {
-        past: [
-          {
-            css: 'a { color: blue; }',
-            source: 'gallery-reset',
-            at: expect.any(Number),
-          },
-        ],
-        future: [],
-      });
-    });
-
-    it('records nothing when the reset fails', async () => {
-      jest
-        .mocked(galleryUtils.resetGalleryProfile)
-        .mockResolvedValue({ ok: false, errorKey: 'gallery_error_network' });
-
-      await actions.resetToGalleryVersion({
-        state: edited,
-        commit: mockCommit,
-      });
-
-      expect(mockCommit).not.toHaveBeenCalled();
-    });
-
-    it('records nothing when the profile switched while it reset', async () => {
-      const state = { ...edited };
-
-      jest
-        .mocked(galleryUtils.resetGalleryProfile)
-        .mockImplementation(async () => {
-          state.activeProfile = 'other';
-          return { ok: true };
-        });
-
-      await actions.resetToGalleryVersion({ state, commit: mockCommit });
-
-      expect(mockCommit).not.toHaveBeenCalled();
     });
   });
 

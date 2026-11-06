@@ -5,11 +5,17 @@ import VueRouter from 'vue-router';
 import TheBasicsTab from './components/TheBasicsTab.vue';
 import TheStylesTab from './components/TheStylesTab.vue';
 import TheHistoryTab from './components/TheHistoryTab.vue';
-import TheSyncTab from './components/TheSyncTab.vue';
+import TheBackupTab from './components/TheBackupTab.vue';
 import TheAccountTab from './components/TheAccountTab.vue';
 import TheStyleEditorPage from './components/styles/TheStyleEditorPage.vue';
 
-export const TABS = ['basics', 'styles', 'history', 'sync', 'account'] as const;
+export const TABS = [
+  'basics',
+  'styles',
+  'history',
+  'backup',
+  'account',
+] as const;
 
 export type Tab = (typeof TABS)[number];
 
@@ -47,10 +53,10 @@ export const routes: Array<RouteConfig> = [
     meta: { tab: 'history' },
   },
   {
-    path: '/sync',
-    name: 'sync',
-    component: TheSyncTab,
-    meta: { tab: 'sync' },
+    path: '/backup',
+    name: 'backup',
+    component: TheBackupTab,
+    meta: { tab: 'backup' },
   },
   {
     path: '/account',

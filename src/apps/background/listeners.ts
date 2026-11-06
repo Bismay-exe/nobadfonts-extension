@@ -16,9 +16,6 @@ import {
   GetAllOptions,
   OpenOptionsPage,
   OpenShortcutsPage,
-  GoogleSignInRedirect,
-  syncAfterSignInRedirect,
-  OpenDonatePage,
   OpenReportIssuePage,
   SetStyle,
   MoveStyle,
@@ -29,7 +26,6 @@ import {
   DisableStyle,
   SetActiveProfile,
   CreateProfile,
-  InstallStyle,
   RenameProfile,
   DeleteProfile,
   DeleteStyle,
@@ -42,7 +38,6 @@ import {
   GetCompiledStyles,
   GetGoogleWebFontExists,
   GetWebFontFile,
-  RunGoogleDriveSync,
   ScanVersionHistory,
   RestoreVersion,
   UndoRestore,
@@ -56,7 +51,6 @@ import {
   CloseEditorSidePanel,
 } from './messages';
 
-import { updateBadge } from './badge';
 import {
   GetNoBadFontsAccount,
   NoBadFontsSignInReady,
@@ -65,45 +59,7 @@ import {
   isExtensionPage,
   sentFromAuthTab,
 } from './account';
-import {
-  isGalleryUpdatesAlarm,
-  updateGalleryInstalls,
-} from './gallery-updates';
 import { get as getOption, pruneRetired } from './options';
-import {
-  AWAY_SECONDS,
-  isSyncAlarm,
-  updatePeriodicSync,
-} from './sync-scheduler';
-import { getGoogleDriveSyncEnabled, SYNC_ISSUE_KEYS } from '@stylebot/sync';
-import { isSignInRedirect } from '@stylebot/google-auth';
-import { syncStyles } from './sync';
-import {
-  CaptureGalleryScreenshot,
-  OpenGalleryDraft,
-  PublishProfileToGallery,
-  GetGalleryDraft,
-  GalleryDraftPublished,
-  GalleryStyleDeleted,
-  GetPublishedGalleryStyle,
-  ResetGalleryProfile,
-  GetGallerySuggestions,
-  GetGalleryStyle,
-  PreviewGalleryStyle,
-  OpenGalleryPreview,
-  GetGalleryPreview,
-  InstallGalleryPreview,
-  EndGalleryPreview,
-  UndoGalleryInstall,
-  GetGalleryInstallStatus,
-  PublishGalleryStyleUpdate,
-} from './gallery';
-import {
-  endGalleryPreview,
-  endGalleryPreviewOffSite,
-  forgetGalleryInstall,
-  syncGalleryPreviewSites,
-} from './gallery-preview';
 
 import type {
   TabUpdated,
@@ -131,7 +87,6 @@ export const initListeners = (): void => {
   chrome.runtime.onInstalled.addListener(
     async ({ reason, previousVersion }) => {
       configureSidePanelTabs();
-      syncGalleryPreviewSites();
       detectChromiumVariant().catch(() => undefined);
 
       if (reason === 'install' || reason === 'update') {
@@ -140,7 +95,7 @@ export const initListeners = (): void => {
 
       if (reason === 'install') {
         chrome.tabs.create({
-          url: getSiteUrl('/welcome'),
+          url: getSiteUrl('/'),
         });
 
         setNotification(getReleaseNotificationId(), true);
@@ -163,75 +118,19 @@ export const initListeners = (): void => {
   initSidePanelTabs();
   initSidePanel();
 
-  // Scheduled syncs run without a user in front of them, so they never open an
-  // auth window; a run that needs one leaves a flag for the UI instead.
-  chrome.alarms.onAlarm.addListener(alarm => {
-    if (isSyncAlarm(alarm.name)) {
-      syncStyles({ interactive: false });
-    }
-
-    if (isGalleryUpdatesAlarm(alarm.name)) {
-      updateGalleryInstalls();
-    }
-  });
-
-  // Safari has no idle API; there the alarm and startup still sync.
-  if (chrome.idle) {
-    chrome.idle.setDetectionInterval(AWAY_SECONDS);
-    chrome.idle.onStateChanged.addListener(async state => {
-      if (state === 'active' && (await getGoogleDriveSyncEnabled())) {
-        syncStyles({ interactive: false });
-      }
-    });
-  }
-
-  // The enabled flag is flipped from the options page; the alarms and the
-  // badge that follow it are owned here so they stay in step no matter which
-  // page changed it.
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') {
-      return;
-    }
-
-    if (changes['google-drive-sync-enabled']) {
-      updatePeriodicSync();
-    }
-
-    if (SYNC_ISSUE_KEYS.some(key => changes[key])) {
-      updateBadge();
-    }
-  });
-
-  // Pick up what other devices pushed while the browser was closed.
+  // Pick up side-panel tabs on startup.
   chrome.runtime.onStartup.addListener(async () => {
     configureSidePanelTabs();
-    syncGalleryPreviewSites();
-
-    if (await getGoogleDriveSyncEnabled()) {
-      syncStyles({ interactive: false });
-    }
   });
 
   // When an existing tab is updated, refresh the context-menu.
   // A closed tab takes its editor window with it; a closed window is forgotten.
   chrome.tabs.onRemoved.addListener(tabId => {
     editorWindow.close(tabId);
-    endGalleryPreview(tabId, { notifyTab: false });
-    forgetGalleryInstall(tabId);
   });
 
   chrome.windows.onRemoved.addListener(windowId => {
     editorWindow.forgetWindow(windowId);
-  });
-
-  chrome.tabs.onUpdated.addListener((tabId, { url }) => {
-    if (url && isSignInRedirect(url)) {
-      syncAfterSignInRedirect(url, tabId);
-    }
-
-    if (url) {
-      endGalleryPreviewOffSite(tabId, url);
-    }
   });
 
   // Only loads and URL changes: title, favicon and audio updates on a loaded
@@ -307,9 +206,6 @@ export const initListeners = (): void => {
         case 'OpenShortcutsPage':
           OpenShortcutsPage();
           break;
-        case 'OpenDonatePage':
-          OpenDonatePage();
-          break;
         case 'OpenReportIssuePage':
           OpenReportIssuePage();
           break;
@@ -340,9 +236,6 @@ export const initListeners = (): void => {
           break;
         case 'CreateProfile':
           CreateProfile(message, sendResponse);
-          return true;
-        case 'InstallStyle':
-          InstallStyle(message, sender, sendResponse);
           return true;
         case 'RenameProfile':
           RenameProfile(message);
@@ -407,13 +300,6 @@ export const initListeners = (): void => {
         case 'GetWebFontFile':
           GetWebFontFile(message, sendResponse);
           return true;
-
-        case 'RunGoogleDriveSync':
-          RunGoogleDriveSync(message, sendResponse);
-          return true;
-        case 'GoogleSignInRedirect':
-          GoogleSignInRedirect(message, sender);
-          break;
         case 'ScanVersionHistory':
           ScanVersionHistory(message, sendResponse);
           return true;
@@ -460,61 +346,6 @@ export const initListeners = (): void => {
           break;
         case 'RestoreTab':
           restoreTab(message.tabId).then(() => sendResponse({ ok: true }));
-          return true;
-
-        case 'CaptureGalleryScreenshot':
-          CaptureGalleryScreenshot(message, sender, sendResponse);
-          return true;
-        case 'OpenGalleryDraft':
-          OpenGalleryDraft(message, sender, sendResponse);
-          return true;
-        case 'PublishProfileToGallery':
-          PublishProfileToGallery(message, sendResponse);
-          return true;
-        case 'GetGalleryDraft':
-          GetGalleryDraft(message, sender, sendResponse);
-          return true;
-        case 'GalleryDraftPublished':
-          GalleryDraftPublished(message, sender, sendResponse);
-          return true;
-        case 'GalleryStyleDeleted':
-          GalleryStyleDeleted(message, sender, sendResponse);
-          return true;
-        case 'GetPublishedGalleryStyle':
-          GetPublishedGalleryStyle(message, sendResponse);
-          return true;
-        case 'ResetGalleryProfile':
-          ResetGalleryProfile(message, sendResponse);
-          return true;
-        case 'GetGallerySuggestions':
-          GetGallerySuggestions(message, sendResponse);
-          return true;
-        case 'GetGalleryStyle':
-          GetGalleryStyle(message, sendResponse);
-          return true;
-        case 'PreviewGalleryStyle':
-          PreviewGalleryStyle(message, sender, sendResponse);
-          return true;
-        case 'OpenGalleryPreview':
-          OpenGalleryPreview(message, sender, sendResponse);
-          return true;
-        case 'GetGalleryPreview':
-          GetGalleryPreview(message, sender, sendResponse);
-          return true;
-        case 'InstallGalleryPreview':
-          InstallGalleryPreview(message, sender, sendResponse);
-          return true;
-        case 'EndGalleryPreview':
-          EndGalleryPreview(message, sender);
-          break;
-        case 'UndoGalleryInstall':
-          UndoGalleryInstall(message, sender, sendResponse);
-          return true;
-        case 'GetGalleryInstallStatus':
-          GetGalleryInstallStatus(message, sender, sendResponse);
-          return true;
-        case 'PublishGalleryStyleUpdate':
-          PublishGalleryStyleUpdate(message, sender, sendResponse);
           return true;
       }
 

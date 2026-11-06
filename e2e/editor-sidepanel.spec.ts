@@ -382,7 +382,7 @@ const installFresh = async (
     viewport: null,
     colorScheme: null,
   });
-  await context.route('https://stylebot.dev/**', route =>
+  await context.route('https://www.nobadfonts.in/**', route =>
     route.fulfill({ contentType: 'text/html', body: '' })
   );
 

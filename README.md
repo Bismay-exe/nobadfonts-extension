@@ -1,42 +1,42 @@
-# Stylebot
+# NoBadFonts
 
-![Build](https://github.com/ankit/stylebot/actions/workflows/build.yml/badge.svg)
-[![Kofi](https://badgen.net/badge/icon/kofi?icon=kofi&label)](https://ko-fi.com/stylebot)
-[![Chrome Webstore Version](https://img.shields.io/chrome-web-store/v/oiaejidbmkiecgbjeifoejpgmdaleoha)](https://chrome.google.com/webstore/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha)
-[![Chrome Users](https://badgen.net/chrome-web-store/users/oiaejidbmkiecgbjeifoejpgmdaleoha)](https://chrome.google.com/webstore/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha)
-[![Webstore Rating](https://img.shields.io/chrome-web-store/stars/oiaejidbmkiecgbjeifoejpgmdaleoha)](https://chrome.google.com/webstore/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha)
-[![Firefox Add-on Version](https://img.shields.io/amo/v/stylebot-web)](https://addons.mozilla.org/firefox/addon/stylebot-web/)
-[![Firefox Users](https://img.shields.io/amo/users/stylebot-web)](https://addons.mozilla.org/firefox/addon/stylebot-web/)
-![License](https://img.shields.io/github/license/ankit/stylebot)
+Change the fonts and CSS of any website, in your browser.
 
-Change the appearance of any website. Available for [Chrome](https://chrome.google.com/webstore/detail/stylebot/oiaejidbmkiecgbjeifoejpgmdaleoha), [Firefox](https://addons.mozilla.org/firefox/addon/stylebot-web/) and [Edge](https://microsoftedge.microsoft.com/addons/detail/stylebot/mjolbpfednnbebfapicajpifliopnnai).
+![NoBadFonts's editor in the side panel, picking an element on Hacker News styled with Dracula](docs/images/editor.webp)
 
-![Stylebot's editor in the side panel, picking an element on Hacker News styled with Dracula](docs/images/editor.webp)
-
-- **Visual editor**: Pick any element and restyle it, no CSS needed. Dock it beside the page or pop it out.
-- **Code editor**: Write your own CSS with autocomplete and color swatches.
-- **Instant**: Every change applies as you make it and saves automatically.
+- **Font library**: browse licensed typefaces and apply them to any element.
+- **Visual editor**: pick any element and restyle it, no CSS needed. Dock it beside the page or pop it out.
+- **Code editor**: write your own CSS with autocomplete and color swatches.
+- **Instant**: every change applies as you make it and saves automatically.
+- **Profiles**: keep several named looks for a site and switch between them.
 - **Presets**: Readability for distraction-free articles, Grayscale to mute color.
-- **Sync and history**: Keep styles in sync across browsers and restore any site's earlier versions.
-- **Command line**: Restyle pages from the terminal, or let a coding agent such as Claude Code do it.
+- **History**: restore any site's earlier versions.
+- **Backup**: export and import your styles as JSON.
 
-## Command line
+Free and open source. No tracking, no ads.
 
-The `stylebot` CLI drives Stylebot in your running browser: list tabs, inspect pages, get and set styles, and take screenshots. Turn it on in Stylebot's options, then:
+## Extension
+
+The extension lives in this repo and builds for Chrome, Edge and Firefox:
 
 ```bash
-npm install -g @stylebot/cli
-stylebot install
+yarn install
+yarn build          # Chrome/Edge into dist/
+yarn build:firefox  # Firefox into firefox-dist/
 ```
 
-It works on Chrome, Edge and other Chromium browsers. See [docs/cli.md](docs/cli.md) for commands and the Claude Code plugin.
+See [docs/development.md](docs/development.md) for setup and [docs/releases.md](docs/releases.md) for packaging.
+
+## The website
+
+The NoBadFonts website is in a separate repo, [fontique](https://github.com/Bismay-exe/fontique). It hosts the font catalog, docs and legal pages the extension links to.
 
 ## Contributing
 
 - **Contribute**: bug fixes, features and translations are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Developer docs**: setup, architecture and testing in [docs/](docs/README.md)
-- **Support**: [buy me a coffee](https://ko-fi.com/stylebot) via Ko-fi
+- **Support**: open an issue in the [extension repo](https://github.com/Bismay-exe/nobadfonts-extension/issues)
 
 ## License
 
-Stylebot is released under the [MIT License](LICENSE).
+NoBadFonts is released under the [MIT License](LICENSE), which preserves the original Stylebot copyright.

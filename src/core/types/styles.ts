@@ -8,24 +8,8 @@ import type { Timestamp } from './shared';
 export type StyleProfile = {
   name: string;
   css?: string;
-  galleryListing?: GalleryListing;
   // Missing on profiles added before Stylebot recorded it.
   createdAt?: Timestamp;
-};
-
-/**
- * The gallery listing a profile was installed from or published as. It
- * lives on the profile, so it syncs with it and goes when it does.
- */
-export type GalleryListing = {
-  styleId: number;
-  slug: string;
-  version: number;
-  // A hash of that version's CSS, to tell if the profile was edited since.
-  cssHash: string;
-  // Published from here, so publishing it again updates the gallery style,
-  // rather than installed from it.
-  published: boolean;
 };
 
 export type StyleProfiles = {

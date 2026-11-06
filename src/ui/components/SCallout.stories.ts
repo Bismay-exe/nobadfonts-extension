@@ -27,8 +27,8 @@ export const Tones = fromTemplate(
   `
   <div style="display: flex; flex-direction: column; gap: 12px; max-width: 360px">
     <s-callout tone="info">Your styles are up to date.</s-callout>
-    <s-callout tone="warning">The Gallery took these out of your CSS.</s-callout>
-    <s-callout tone="danger">Couldn't reach the Gallery. Check your connection and try again.</s-callout>
+    <s-callout tone="warning">Some fonts were removed from your stack.</s-callout>
+    <s-callout tone="danger">Couldn't reach the font catalog. Check your connection and try again.</s-callout>
     <s-callout tone="info" @dismiss="() => {}">Dismissable, with a close button.</s-callout>
   </div>
 `

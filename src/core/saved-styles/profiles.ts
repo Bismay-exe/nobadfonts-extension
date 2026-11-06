@@ -1,5 +1,4 @@
 import type {
-  GalleryListing,
   StyleProfile,
   StyleProfiles,
   StyleWithoutUrl,
@@ -14,7 +13,6 @@ type WithProfiles = Pick<StyleWithoutUrl, 'css' | 'profiles' | 'activeProfile'>;
 export type ProfileSheet = {
   name: string;
   css: string;
-  galleryListing?: GalleryListing;
   createdAt?: Timestamp;
 };
 
@@ -42,52 +40,9 @@ const isProfile = (value: unknown): value is StyleProfile =>
   typeof value.name === 'string' &&
   (value.css === undefined || typeof value.css === 'string');
 
-const isGalleryListing = (value: unknown): value is GalleryListing =>
-  isPlainObject(value) &&
-  Number.isSafeInteger(value.styleId) &&
-  typeof value.slug === 'string' &&
-  typeof value.version === 'number' &&
-  typeof value.cssHash === 'string' &&
-  typeof value.published === 'boolean';
-
-/**
- * A stored gallery listing with only the fields a listing has, or undefined
- * when it isn't one.
- */
-const repairGalleryListing = (value: unknown): GalleryListing | undefined => {
-  if (!isGalleryListing(value)) {
-    return undefined;
-  }
-
-  const { styleId, slug, version, cssHash, published } = value;
-
-  return { styleId, slug, version, cssHash, published };
-};
-
-/**
- * Whether two gallery listings are of the same style at the same version,
- * both installed or both published.
- */
-export const isSameGalleryListing = (
-  a: GalleryListing | undefined,
-  b: GalleryListing | undefined
-): boolean => {
-  if (!a || !b) {
-    return a === b;
-  }
-
-  return (
-    a.styleId === b.styleId &&
-    a.slug === b.slug &&
-    a.version === b.version &&
-    a.cssHash === b.cssHash &&
-    a.published === b.published
-  );
-};
-
 /**
  * The fields of a profile this version doesn't know, which a newer Stylebot
- * may have added.
+ * may have added. Gallery listings from older versions are dropped.
  */
 const getUnknownFields = (profile: StyleProfile): Record<string, unknown> => {
   const fields: Record<string, unknown> = { ...profile };
@@ -109,25 +64,24 @@ export const hasSameUnknownFields = (
   JSON.stringify(getUnknownFields(a)) === JSON.stringify(getUnknownFields(b));
 
 /**
- * A profile entry as stored: css only when it isn't the active profile's, a
- * gallery listing only when it has one, and any field this version doesn't
- * know kept as it is, so it survives until a newer version reads it again.
+ * A profile entry as stored: css only when it isn't the active profile's, and
+ * any field this version doesn't know kept as it is, so it survives until a
+ * newer version reads it again.
  */
 const getStoredProfile = (
-  { css, galleryListing, ...fields }: StyleProfile,
+  profile: StyleProfile,
   isActive: boolean
 ): StyleProfile => {
-  const profile: StyleProfile = fields;
+  const fields: StyleProfile = { ...profile };
 
-  if (!isActive && css !== undefined) {
-    profile.css = css;
+  delete fields.css;
+  delete (fields as Record<string, unknown>).galleryListing;
+
+  if (!isActive && profile.css !== undefined) {
+    fields.css = profile.css;
   }
 
-  if (galleryListing) {
-    profile.galleryListing = galleryListing;
-  }
-
-  return profile;
+  return fields;
 };
 
 /**
@@ -147,9 +101,9 @@ const getStoredProfiles = (
 
 /**
  * Repairs a style's profiles into the stored shape: invalid entries and
- * gallery listings dropped, the active id one of the profiles, and its css
- * only in the style's own css. Fields it doesn't know are kept. A style left
- * without profiles loses both fields.
+ * gallery listings from older versions dropped, the active id one of the
+ * profiles, and its css only in the style's own css. Fields it doesn't know
+ * are kept. A style left without profiles loses both fields.
  */
 export const normalizeProfiles = <T extends WithProfiles>(style: T): T => {
   const { profiles, activeProfile, ...rest } = style;
@@ -172,14 +126,7 @@ export const normalizeProfiles = <T extends WithProfiles>(style: T): T => {
       ? activeProfile
       : entries.find(([, profile]) => profile.css === undefined)?.[0] ?? ids[0];
 
-  const repaired = entries.map(([id, profile]): [string, StyleProfile] => [
-    id,
-    {
-      ...profile,
-      galleryListing: repairGalleryListing(profile.galleryListing),
-    },
-  ]);
-  const storedProfiles = getStoredProfiles(repaired, active);
+  const storedProfiles = getStoredProfiles(entries, active);
 
   return { ...style, activeProfile: active, profiles: storedProfiles };
 };
@@ -302,13 +249,11 @@ export const addProfile = <T extends WithProfiles>(
     id,
     name,
     css,
-    galleryListing,
     activate,
   }: {
     id: string;
     name: string;
     css: string;
-    galleryListing?: GalleryListing;
     activate: boolean;
   }
 ): T => {
@@ -322,7 +267,7 @@ export const addProfile = <T extends WithProfiles>(
     active: activate ? id : expanded.active,
     sheets: {
       ...expanded.sheets,
-      [id]: { name, css, galleryListing, createdAt: getCurrentTimestamp() },
+      [id]: { name, css, createdAt: getCurrentTimestamp() },
     },
   });
 };
@@ -368,46 +313,6 @@ const updateSheet = <T extends WithProfiles>(
     ...expanded,
     sheets: { ...expanded.sheets, [id]: { ...sheet, ...change } },
   });
-};
-
-/**
- * Sets the gallery listing a profile was installed from or published as.
- */
-export const setProfileGalleryListing = <T extends WithProfiles>(
-  style: T,
-  id: string,
-  galleryListing: GalleryListing
-): T => {
-  const sheet = expandProfiles(style).sheets[id];
-
-  return sheet && isSameGalleryListing(sheet.galleryListing, galleryListing)
-    ? style
-    : updateSheet(style, id, { galleryListing });
-};
-
-/**
- * Removes a profile's gallery listing, leaving the profile itself as it is.
- */
-export const removeProfileGalleryListing = <T extends WithProfiles>(
-  style: T,
-  id: string
-): T => updateSheet(style, id, { galleryListing: undefined });
-
-/**
- * Removes the gallery listings that match from all of a style's profiles.
- * Returns the style itself when none match.
- */
-export const removeGalleryListings = <T extends WithProfiles>(
-  style: T,
-  matches: (galleryListing: GalleryListing) => boolean
-): T => {
-  const { sheets } = expandProfiles(style);
-  const ids = Object.keys(sheets).filter(id => {
-    const { galleryListing } = sheets[id];
-    return galleryListing !== undefined && matches(galleryListing);
-  });
-
-  return ids.reduce(removeProfileGalleryListing, style);
 };
 
 /**

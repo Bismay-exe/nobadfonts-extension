@@ -3,7 +3,9 @@ import type { StyleMap, StyleWithoutUrl, Timestamp } from '@stylebot/types';
 import { isEquivalentStyle } from './equivalence';
 import { isStyleMap, sanitizeStyleMap } from './style-map';
 
-export const BACKUP_FORMAT = 'stylebot-backup';
+export const BACKUP_FORMAT = 'nobadfonts-backup';
+// Backups exported before NoBadFonts 1.0 still import.
+const LEGACY_BACKUP_FORMAT = 'stylebot-backup';
 export const BACKUP_VERSION = 1;
 
 export type Backup = {
@@ -60,7 +62,7 @@ export const getBackupFilename = (date: Date): string => {
     pad(date.getDate()),
   ].join('-');
 
-  return `stylebot-backup-${day}.json`;
+  return `nobadfonts-backup-${day}.json`;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -94,7 +96,11 @@ export const parseBackup = (text: string): ParsedBackup => {
 
   let styles: unknown = value;
 
-  if (isRecord(value) && value.format === BACKUP_FORMAT) {
+  const isEnvelope =
+    isRecord(value) &&
+    (value.format === BACKUP_FORMAT || value.format === LEGACY_BACKUP_FORMAT);
+
+  if (isEnvelope && isRecord(value)) {
     if (typeof value.version !== 'number') {
       return { ok: false, errorKey: 'import_error_not_backup' };
     }

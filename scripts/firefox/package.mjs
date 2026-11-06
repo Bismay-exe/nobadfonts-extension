@@ -46,35 +46,35 @@ function run(command, args, options = {}) {
 /**
  * The build steps AMO reviewers follow to rebuild the extension from source.
  */
-function getBuildInstructions(version, clientSecret) {
+function getBuildInstructions(version, clientId) {
   const nodeVersion = readFileSync(path.join(root, '.nvmrc'), 'utf8').trim();
 
-  return `# Building Stylebot ${version} for Firefox
+  return `# Building NoBadFonts ${version} for Firefox
 
 Requirements: Node.js ${nodeVersion} and Yarn 1 (classic). Any OS with a POSIX shell.
 
 1. \`yarn install --frozen-lockfile\`
-2. \`STYLEBOT_GOOGLE_CLIENT_SECRET=${clientSecret} yarn build:firefox\`
+2. \`NOBADFONTS_OAUTH_CLIENT_ID=${clientId} yarn build:firefox\`
 
 The built extension is written to \`firefox-dist/\`, which matches the uploaded
-package. The variable is the secret of Stylebot's Google sign-in client for
-installed apps, which Google treats as public since it ships in the package;
+package. The variable is the public client id of NoBadFonts's OAuth client;
 it's kept out of the repository only. No network access beyond the npm
 registry is needed.
 
 ## Notes for reviewers
 
-Stylebot has no server and no analytics. It only talks to these, and only
-when the user turns the feature on:
+NoBadFonts has no analytics. It only talks to these, and only when the user
+turns the feature on:
 
-- **Sync** signs in with Google through \`identity\` and stores styles in the
-  user's own Google Drive, with the \`drive.file\` scope, so it only sees files
-  it created.
+- **NoBadFonts** (\`https://www.nobadfonts.in\` and its Supabase project):
+  the font catalog, font files, and account sign-in. Sign-in opens the
+  system browser and stores the resulting tokens in the background page's
+  IndexedDB; signing out or revoking access in the account settings ends it.
 - **Google Fonts**: when the user picks a web font in the editor, the font
   is loaded from Google Fonts.
 
 All code ships in the package; nothing is loaded remotely. The privacy policy
-is at https://stylebot.dev/privacy.
+is at https://www.nobadfonts.in/legal/privacy.
 `;
 }
 
@@ -91,12 +91,11 @@ if (status.trim()) {
   process.exit(1);
 }
 
-const clientSecret = process.env.STYLEBOT_GOOGLE_CLIENT_SECRET;
+const clientId = process.env.NOBADFONTS_OAUTH_CLIENT_ID;
 
-if (!clientSecret) {
+if (!clientId) {
   console.error(
-    'Set STYLEBOT_GOOGLE_CLIENT_SECRET to the Desktop OAuth client secret; ' +
-      'Google Drive sign-in needs it.'
+    'Set NOBADFONTS_OAUTH_CLIENT_ID to the OAuth client id; account sign-in needs it.'
   );
   process.exit(1);
 }
@@ -111,8 +110,8 @@ try {
   process.exit(1);
 }
 
-const extensionZip = path.join(outDir, `stylebot-${version}-firefox.zip`);
-const sourceZip = path.join(outDir, `stylebot-${version}-source.zip`);
+const extensionZip = path.join(outDir, `nobadfonts-${version}-firefox.zip`);
+const sourceZip = path.join(outDir, `nobadfonts-${version}-source.zip`);
 
 mkdirSync(outDir, { recursive: true });
 rmSync(extensionZip, { force: true });
@@ -137,10 +136,7 @@ run('zip', ['-r', '-X', '-q', extensionZip, '.', '-x', '.build-complete'], {
 run('git', [
   'archive',
   '--format=zip',
-  `--add-virtual-file=AMO-BUILD.md:${getBuildInstructions(
-    version,
-    clientSecret
-  )}`,
+  `--add-virtual-file=AMO-BUILD.md:${getBuildInstructions(version, clientId)}`,
   '-o',
   sourceZip,
   'HEAD',

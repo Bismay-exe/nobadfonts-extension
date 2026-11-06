@@ -1,7 +1,6 @@
 import type { StoryObj } from '@storybook/vue';
 
 import App from '@/apps/options/App.vue';
-import TheCliAccess from '@/apps/options/components/basics/TheCliAccess.vue';
 import ThePosition from '@/apps/options/components/basics/ThePosition.vue';
 import { createRouter } from '@/apps/options/router';
 import type { OptionsState, OptionsStateOverrides } from './options-store';
@@ -44,7 +43,7 @@ export const seededStyles = {
  * given tab, so each tab's stories still exercise the real navigation.
  */
 export const optionsPage = (
-  tab: 'Basics' | 'Styles' | 'Version history' | 'Sync' | 'Account',
+  tab: 'Basics' | 'Styles' | 'Version history' | 'Backup' | 'Account',
   overrides: OptionsStateOverrides = {},
   afterNavigate?: (root: HTMLElement) => Promise<void>
 ): StoryObj => ({
@@ -72,32 +71,6 @@ export const optionsPage = (
     await afterNavigate?.(canvasElement);
   },
 });
-
-/**
- * Renders the CLI access card on its own, since the Basics tab shows it only
- * in development builds. The play gets the store, to read what was saved.
- */
-export const cliAccessCard = (
-  overrides: OptionsStateOverrides = {},
-  play?: (root: HTMLElement, store: Store<OptionsState>) => Promise<void>
-): StoryObj => {
-  let store: Store<OptionsState>;
-
-  return {
-    render: () => {
-      store = createOptionsStore(overrides);
-
-      return {
-        components: { TheCliAccess },
-        store,
-        template: '<the-cli-access />',
-      };
-    },
-    play: async ({ canvasElement }) => {
-      await play?.(canvasElement, store);
-    },
-  };
-};
 
 /**
  * Renders the editor Position row on its own. The play gets the store, to

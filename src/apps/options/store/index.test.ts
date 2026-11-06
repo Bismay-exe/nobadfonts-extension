@@ -1,76 +1,44 @@
-jest.mock('@stylebot/sync', () => ({
-  getGoogleDriveSyncEnabled: jest.fn(),
-  getSyncState: jest.fn(),
-  getSyncNeedsAuth: jest.fn().mockResolvedValue(false),
-  setGoogleDriveSyncEnabled: jest.fn(),
-  clearSyncState: jest.fn(),
-  dismissSyncConflict: jest.fn(),
-}));
-
 jest.mock('../utils', () => ({
   getAllStyles: jest.fn().mockResolvedValue({}),
-  runGoogleDriveSync: jest.fn(),
+  setAllStyles: jest.fn().mockResolvedValue(true),
+  setOption: jest.fn(),
+  getAllOptions: jest.fn().mockResolvedValue({}),
+  getCommands: jest.fn().mockResolvedValue({}),
+  scanVersionHistory: jest.fn(),
+  restoreVersion: jest.fn(),
+  undoRestore: jest.fn(),
 }));
 
-import type { SyncState } from '@stylebot/types';
-import {
-  getGoogleDriveSyncEnabled,
-  getSyncState,
-  setGoogleDriveSyncEnabled,
-} from '@stylebot/sync';
-
-import { runGoogleDriveSync } from '../utils';
+import { setAllStyles } from '../utils';
 import { createStore } from '.';
 
-/**
- * Stands in for chrome.storage: the enabled flag reads back what was last set.
- */
-const storeEnabledFlag = () => {
-  let enabled = false;
-  jest
-    .mocked(setGoogleDriveSyncEnabled)
-    .mockImplementation(value => (enabled = value));
-  jest
-    .mocked(getGoogleDriveSyncEnabled)
-    .mockImplementation(async () => enabled);
-};
+beforeEach(() => {
+  jest.clearAllMocks();
+});
 
-describe('connecting Google Drive', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    storeEnabledFlag();
-  });
-
-  it('stays connected once the first sync goes through', async () => {
-    jest.mocked(runGoogleDriveSync).mockResolvedValue({
-      ok: true,
-      metadata: {} as never,
-    });
-    jest
-      .mocked(getSyncState)
-      .mockResolvedValue({ lastSyncedAt: 'now' } as SyncState);
+describe('importStyles', () => {
+  it('adopts the imported styles once the background stored them', async () => {
+    const styles = {
+      'example.com': {
+        css: 'h1 { color: red; }',
+        enabled: true,
+        readability: false,
+        modifiedTime: '',
+      },
+    };
 
     const store = createStore();
-    await store.dispatch('setGoogleDriveSyncEnabled', true);
+    await expect(store.dispatch('importStyles', styles)).resolves.toBe(true);
 
-    expect(store.state.googleDriveSyncEnabled).toBe(true);
-    expect(store.state.syncStatus).toBeNull();
+    expect(store.state.styles).toEqual(styles);
   });
 
-  it('goes back to disconnected when the first sync fails, keeping the error', async () => {
-    jest.mocked(runGoogleDriveSync).mockResolvedValue({
-      ok: false,
-      errorKey: 'sync_error_auth',
-    });
-    jest.mocked(getSyncState).mockResolvedValue(undefined);
+  it('keeps the styles it had when the background fails to store them', async () => {
+    jest.mocked(setAllStyles).mockResolvedValue(false);
 
     const store = createStore();
-    await store.dispatch('setGoogleDriveSyncEnabled', true);
+    await expect(store.dispatch('importStyles', {})).resolves.toBe(false);
 
-    expect(store.state.googleDriveSyncEnabled).toBe(false);
-    expect(setGoogleDriveSyncEnabled).toHaveBeenLastCalledWith(false);
-    expect(store.state.syncStatus).toEqual(
-      expect.objectContaining({ type: 'error', messageKey: 'sync_error_auth' })
-    );
+    expect(store.state.styles).toEqual({});
   });
 });

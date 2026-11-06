@@ -20,7 +20,7 @@ describe('ToggleStylebot.vue', () => {
     });
 
     expect(wrapper.text()).toContain('style_this_page');
-    expect(wrapper.text()).not.toContain('close_stylebot');
+    expect(wrapper.text()).not.toContain('close_nobadfonts');
   });
 
   it('should show the "close" label when open', () => {
@@ -28,7 +28,7 @@ describe('ToggleStylebot.vue', () => {
       propsData: { tab, isOpen: true },
     });
 
-    expect(wrapper.text()).toContain('close_stylebot');
+    expect(wrapper.text()).toContain('close_nobadfonts');
     expect(wrapper.text()).not.toContain('style_this_page');
   });
 

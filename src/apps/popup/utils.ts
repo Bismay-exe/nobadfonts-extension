@@ -18,28 +18,12 @@ import type {
   OpenEditorSidePanel,
   OpenEditorSidePanelResponse,
   RestoreTab,
-  GetGallerySuggestions,
-  GetGallerySuggestionsResponse,
-  PreviewGalleryStyle,
-  PreviewGalleryStyleResponse,
-  GetGalleryPreview,
-  GetGalleryPreviewResponse,
-  InstallGalleryPreview,
-  InstallGalleryPreviewResponse,
-  EndGalleryPreview,
-  GetPublishedGalleryStyle,
-  GetPublishedGalleryStyleResponse,
-  PublishProfileToGallery,
 } from '@stylebot/types';
-import { getGalleryMenuItem } from '@stylebot/gallery';
-import type { GalleryMenuItem } from '@stylebot/gallery';
 import { STYLES_KEY, getStylesForPage } from '@stylebot/saved-styles';
 import { defaultOptions } from '@stylebot/settings';
 
 import {
   openOptionsPage,
-  openReportIssuePage,
-  openDonatePage,
   detectChromiumVariantSync,
   doesSidePanelWorkInChromiumVariant,
   getBrowserCommands,
@@ -309,27 +293,12 @@ export const openStyleInOptions = (url: string): void => {
   window.close();
 };
 
-export const openSyncOptions = (): void => {
-  openOptionsPage('/sync');
-  window.close();
-};
-
 /**
  * Opens Stylebot's page in the browser's extension settings, where access to
  * file URLs is turned on.
  */
 export const openExtensionDetails = (): void => {
   chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
-  window.close();
-};
-
-export const reportIssue = (): void => {
-  openReportIssuePage();
-  window.close();
-};
-
-export const donate = (): void => {
-  openDonatePage();
   window.close();
 };
 
@@ -359,83 +328,4 @@ export const forwardClickToInput = (
 
   const input = container.querySelector('input') as HTMLInputElement | null;
   input?.click();
-};
-
-export const getGallerySuggestions = (
-  tab: chrome.tabs.Tab
-): Promise<GetGallerySuggestionsResponse> =>
-  chrome.runtime.sendMessage<
-    GetGallerySuggestions,
-    GetGallerySuggestionsResponse
-  >({
-    name: 'GetGallerySuggestions',
-    pageUrl: tab.url ?? '',
-    incognito: tab.incognito,
-  });
-
-export const previewGalleryStyle = (
-  tabId: number,
-  id: number
-): Promise<PreviewGalleryStyleResponse> =>
-  chrome.runtime.sendMessage<PreviewGalleryStyle, PreviewGalleryStyleResponse>({
-    name: 'PreviewGalleryStyle',
-    tabId,
-    id,
-  });
-
-export const getGalleryPreview = (
-  tabId: number
-): Promise<GetGalleryPreviewResponse> =>
-  chrome.runtime.sendMessage<GetGalleryPreview, GetGalleryPreviewResponse>({
-    name: 'GetGalleryPreview',
-    tabId,
-  });
-
-export const installGalleryPreview = (
-  tabId: number
-): Promise<InstallGalleryPreviewResponse> =>
-  chrome.runtime.sendMessage<
-    InstallGalleryPreview,
-    InstallGalleryPreviewResponse
-  >({ name: 'InstallGalleryPreview', tabId });
-
-export const endGalleryPreview = (tabId: number): Promise<void> =>
-  chrome.runtime.sendMessage<EndGalleryPreview>({
-    name: 'EndGalleryPreview',
-    tabId,
-  });
-
-/**
- * Publishes a profile on the gallery site, from a capture of the tab with it
- * showing.
- */
-export const publishProfileToGallery = (
-  tabId: number,
-  url: string,
-  profileId: string
-): void => {
-  const message: PublishProfileToGallery = {
-    name: 'PublishProfileToGallery',
-    tabId,
-    url,
-    profileId,
-  };
-
-  chrome.runtime.sendMessage(message);
-};
-
-/**
- * A profile's Gallery menu item.
- */
-export const getPublishMenuItem = async (
-  url: string,
-  profileId: string,
-  css: string
-): Promise<GalleryMenuItem> => {
-  const response = await chrome.runtime.sendMessage<
-    GetPublishedGalleryStyle,
-    GetPublishedGalleryStyleResponse
-  >({ name: 'GetPublishedGalleryStyle', url, profileId });
-
-  return getGalleryMenuItem(response, css);
 };

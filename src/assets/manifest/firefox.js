@@ -8,7 +8,7 @@ module.exports = {
 
   browser_specific_settings: {
     gecko: {
-      id: '{52bda3fd-dc48-4b3d-a7b9-58af57879f1e}',
+      id: 'nobadfonts@nobadfonts.in',
       strict_min_version: '137.0',
     },
   },

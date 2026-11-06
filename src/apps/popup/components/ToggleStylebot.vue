@@ -46,7 +46,7 @@ export default Vue.extend({
   computed: {
     label(): string {
       if (this.isOpen) {
-        return this.t('close_stylebot');
+        return this.t('close_nobadfonts');
       }
 
       if (this.profileName) {

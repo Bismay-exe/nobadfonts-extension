@@ -1,5 +1,4 @@
-// The store screenshots, in listing order. Chrome takes the first five, Edge
-// takes all of them, and Safari all but the CLI.
+// The store screenshots, in listing order.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,24 +9,17 @@ import {
   HEIGHT,
   PHONE,
   capture,
-  capturePopup,
-  fitPopup,
   openPanel,
-  openPopup,
   openSite,
   profiles,
   seed,
   showTab,
   style,
-  stubGallery,
-  syncState,
   wait,
 } from './browser.mjs';
-import { captureCli } from './cli-shot.mjs';
-import { gallery } from './themes.mjs';
 
 /**
- * A theme kept beside these scripts, for one the site's gallery doesn't list.
+ * A theme kept beside these scripts, so captures need no other checkout.
  */
 const localTheme = name =>
   fs.readFileSync(
@@ -36,40 +28,6 @@ const localTheme = name =>
   );
 
 export const hnModern = () => localTheme('hn-modern');
-
-/**
- * Gallery styles for Craigslist as the API lists them, with their CSS.
- */
-const craigslistGallery = () => {
-  const day = 24 * 60 * 60 * 1000;
-  const listed = (id, name, username, installs, css) => ({
-    id,
-    site: 'craigslist.org',
-    slug: name.toLowerCase().replace(/\s+/g, '-'),
-    name,
-    description: null,
-    author: { id: `author-${id}`, username },
-    version: 3,
-    installs,
-    createdAt: Date.now() - 90 * day,
-    updatedAt: Date.now() - 6 * day,
-    screenshot: '',
-    css,
-  });
-
-  return [
-    listed(
-      57,
-      'Classifieds',
-      'ankit',
-      1240,
-      localTheme('craigslist-classifieds')
-    ),
-    // Listed but never previewed, so they need no CSS.
-    listed(41, 'Night Market', 'maya', 860, ''),
-    listed(63, 'Swap Meet', 'jun', 410, ''),
-  ];
-};
 
 // GitHub wraps the repo's last-commit row at the panel's width, so it's laid
 // out a little wider and scaled into the space.
@@ -88,10 +46,9 @@ const openPanelFor = (browser, page, options) =>
 
 const hackerNews = active => {
   const list = [
-    { name: 'Night Shift', css: gallery('hn', 'night-shift') },
+    { name: 'Night Shift', css: localTheme('hn-terminal') },
     { name: 'Modern', css: hnModern() },
-    { name: 'Newspaper', css: gallery('hn', 'newspaper') },
-    { name: 'Newspaper Dark', css: gallery('hn', 'newspaper-dark') },
+    { name: 'Everforest', css: localTheme('hn-everforest') },
   ];
   const index = list.findIndex(({ name }) => name === active);
   return {
@@ -159,8 +116,8 @@ export const SHOTS = [
       await seed(browser, {
         styles: {
           'en.wikipedia.org': profiles(
-            { name: 'Slate', css: gallery('wikipedia', 'slate') },
-            { name: 'Parchment', css: gallery('wikipedia', 'parchment') }
+            { name: 'Reading', css: localTheme('wikipedia-book') },
+            { name: 'Night owl', css: localTheme('wikipedia-night-owl') }
           ),
         },
       });
@@ -194,11 +151,10 @@ export const SHOTS = [
     run: async (browser, file, options) => {
       await seed(browser, {
         styles: {
-          'github.com': profiles(
-            { name: 'Dracula', css: gallery('github', 'dracula') },
-            { name: 'Solarized', css: gallery('github', 'solarized') },
-            { name: 'Terminal', css: gallery('github', 'terminal') }
-          ),
+          'github.com': profiles({
+            name: 'Dracula',
+            css: localTheme('github-dracula'),
+          }),
         },
       });
       const page = await openSite(
@@ -223,73 +179,8 @@ export const SHOTS = [
     },
   },
   {
-    name: '3-gallery',
-    about: "The popup's Gallery: Craigslist previewing Classifieds",
-    appearance: 'light',
-    slide: {
-      title: 'Try styles from the *Gallery*.',
-      accent: 'pink',
-      crop: { x: 598 },
-    },
-    run: async (browser, file, options) => {
-      await stubGallery(browser, 'craigslist.org', craigslistGallery(), 14);
-      const page = await openSite(
-        browser.context,
-        'https://www.craigslist.org/area/newyork',
-        { full: true }
-      );
-      const popup = await openPopup(browser, page);
-      await popup.getByRole('button', { name: /Classifieds/ }).click();
-      await wait(2500);
-      await fitPopup(popup);
-      await page.bringToFront();
-      await wait(500);
-      await capturePopup(browser.context, file, page, popup, {
-        appearance: 'light',
-        ...options,
-      });
-    },
-  },
-  {
-    name: '4-sync',
-    about: 'Sync in Options, connected to Google Drive',
-    appearance: 'dark',
-    slide: {
-      title: 'Your styles, on *every computer*.',
-      accent: 'yellow',
-      pageWidth: 740,
-    },
-    run: async (browser, file, options) => {
-      await seed(browser, {
-        styles: { 'news.ycombinator.com': hackerNews('Newspaper') },
-        ...syncState(),
-      });
-      const page = await openOptions(browser, 'sync', pageWidth(options));
-      await wait(600);
-      await capture(browser.context, file, page, null, {
-        appearance: 'dark',
-        ...options,
-      });
-    },
-  },
-  {
-    name: '5-cli',
-    about: 'The CLI restyling Hacker News from a terminal',
-    appearance: 'light',
-    slide: {
-      title: 'Restyle from the *command line*.',
-      accent: 'indigo',
-    },
-    // Runs its own browser, set up for the CLI.
-    standalone: true,
-    // Safari builds don't carry the CLI.
-    cli: true,
-    run: (file, options) =>
-      captureCli(file, gallery('hn', 'newspaper'), options),
-  },
-  {
     name: '6-profiles',
-    about: 'Profiles: Hacker News in Newspaper Dark',
+    about: 'Profiles: Hacker News in Everforest',
     appearance: 'dark',
     slide: {
       title: 'Switch *looks* in a click.',
@@ -299,7 +190,7 @@ export const SHOTS = [
     phone: { pageWidth: 400 },
     run: async (browser, file, options) => {
       await seed(browser, {
-        styles: { 'news.ycombinator.com': hackerNews('Newspaper Dark') },
+        styles: { 'news.ycombinator.com': hackerNews('Everforest') },
       });
       const page = await openSite(
         browser.context,

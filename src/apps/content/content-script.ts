@@ -8,11 +8,6 @@ import { isStylableDocument } from '@stylebot/saved-styles';
 import { readCache } from '@stylebot/stylesheets';
 import type { TabMessage } from '@stylebot/types';
 
-import {
-  hideGalleryPreview,
-  resumeGalleryPreview,
-  showGalleryPreview,
-} from './gallery-preview';
 import { hidePage, revealPage } from './hide-page';
 import { applyPageState, getPageState, savePageState } from './page-state';
 import { getCompiledStyles } from './saved-styles';
@@ -32,10 +27,6 @@ if (window === window.top) {
         sendResponse(canStyle);
       } else if (message.name === 'GetIsPageReaderable') {
         sendResponse(isReaderable());
-      } else if (message.name === 'ShowGalleryPreview' && canStyle) {
-        showGalleryPreview(message.preview, message.replacedUrl);
-      } else if (message.name === 'HideGalleryPreview') {
-        hideGalleryPreview(message.installed);
       }
     }
   );
@@ -67,10 +58,6 @@ const run = () => {
     clearTimeout(revealTimeout);
     revealPage();
     savePageState(freshState);
-
-    if (window === window.top) {
-      resumeGalleryPreview();
-    }
   });
 };
 

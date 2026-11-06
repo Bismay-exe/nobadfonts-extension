@@ -6,7 +6,6 @@ import type {
   StylebotCommands,
   StylebotEditingMode,
   ReadabilitySettings,
-  GalleryPublished,
 } from '@stylebot/types';
 
 import { walkUnnestedRules } from '@stylebot/css';
@@ -158,25 +157,6 @@ export default {
 
   setHelp(state: State, value: boolean): void {
     state.help = value;
-  },
-
-  setPublishing(state: State, value: boolean): void {
-    state.publishing = value;
-  },
-
-  setCapturing(state: State, value: boolean): void {
-    state.capturing = value;
-  },
-
-  setPublishedGalleryStyle(state: State, value: GalleryPublished | null): void {
-    state.publishedGalleryStyle = value;
-  },
-
-  setInstalledGalleryStyle(
-    state: State,
-    value: State['installedGalleryStyle']
-  ): void {
-    state.installedGalleryStyle = value;
   },
 
   setReadability(state: State, value: boolean): void {

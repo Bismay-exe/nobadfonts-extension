@@ -31,8 +31,6 @@ export const defaultOptions: StylebotOptions = {
   },
   appearance: 'system',
   lastColorSet: 'neutrals',
-  cliAccess: false,
-  gallerySuggestions: true,
 };
 
 export const defaultCommands: StylebotCommands = {
@@ -62,14 +60,3 @@ export {
   defaultReadabilitySettings,
   getReadabilitySettings,
 } from './readability';
-
-export {
-  CLI_PERMISSIONS,
-  supportsCLI,
-  hasCliPermissions,
-  requestCliPermissions,
-  removeCliPermissions,
-  setCliConnected,
-  getCliConnected,
-  onCliConnectedChange,
-} from './cli';

@@ -1,12 +1,8 @@
 # Contributing
 
-## Donate
-
-[Buy me a coffee](https://ko-fi.com/stylebot) via Ko-fi
-
 ## Translate
 
-Help translate Stylebot into your language — see [`docs/translation.md`](docs/translation.md).
+Help translate NoBadFonts into your language — see [`docs/translation.md`](docs/translation.md).
 
 ## Add new features or fix bugs
 

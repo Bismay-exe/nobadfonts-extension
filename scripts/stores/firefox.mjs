@@ -8,7 +8,7 @@ import path from 'node:path';
 
 import { poll, readJson, requireEnv } from './shared.mjs';
 
-const ADDON_ID = '{52bda3fd-dc48-4b3d-a7b9-58af57879f1e}';
+const ADDON_ID = 'nobadfonts@nobadfonts.in';
 const API = 'https://addons.mozilla.org/api/v5';
 
 export const firefoxEnv = ['AMO_JWT_ISSUER', 'AMO_JWT_SECRET'];

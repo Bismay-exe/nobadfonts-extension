@@ -35,14 +35,14 @@ and treats the side panel as unavailable until the reload.
 
 The permission is asked for in two places:
 
-- **Picking the side panel in Options.** Stylebot asks during that click, reloads, and
+- **Picking the side panel in Options.** NoBadFonts asks during that click, reloads, and
   shows Options again. The editor then opens in the side panel from the first time.
 - **Opening the editor in the side panel without it**, as when the position came from
-  elsewhere. Stylebot asks, reloads, and opens the editor again where it was. The reload
+  elsewhere. NoBadFonts asks, reloads, and opens the editor again where it was. The reload
   ends the gesture, so this once the editor opens in the page, unless the click was in
   the page itself and its gesture is still live.
 
-If the permission is refused, the editor opens in the page. Stylebot never reloads twice
+If the permission is refused, the editor opens in the page. NoBadFonts never reloads twice
 in a row for it.
 
 Users of releases where the permission was required keep it.
@@ -55,7 +55,7 @@ Some Chromium browsers have the side panel API but don't honour it:
   them on install and update.
 - **Arc** loads side panels but never shows them.
 
-Stylebot doesn't offer the side panel there, and gives up the permission once it knows
+NoBadFonts doesn't offer the side panel there, and gives up the permission once it knows
 it's in one, so Vivaldi stops opening the panel on updates. Vivaldi is found from the
 background, by data it adds to its windows. Arc can only be found from a page, by the
 palette it adds to every page a moment after it loads.
@@ -66,7 +66,7 @@ isn't showing. If it does, the position moves to the page, and the editor opens 
 
 The manifest's default side panel is a page that closes itself, and it's switched off
 everywhere else. Vivaldi shows it on the first update from a release that required the
-permission, before Stylebot has given the permission up.
+permission, before NoBadFonts has given the permission up.
 
 ## Testing
 

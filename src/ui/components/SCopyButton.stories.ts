@@ -10,7 +10,7 @@ const meta: Meta = {
 
 export default meta;
 
-const template = `<s-copy-button text="npm install -g @stylebot/cli" />`;
+const template = `<s-copy-button text="npx nobadfonts add inter" />`;
 
 export const Default = fromTemplate({ SCopyButton }, template);
 
@@ -21,5 +21,5 @@ export const Focused: StoryObj = {
 
 export const WithLabel = fromTemplate(
   { SCopyButton },
-  `<s-copy-button text="https://gallery.stylebot.dev/style/42/tokyo-night" label="Copy" />`
+  `<s-copy-button text="https://www.nobadfonts.in/fonts/inter" label="Copy" />`
 );

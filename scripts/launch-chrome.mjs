@@ -1,4 +1,4 @@
-// Launches Chrome (or Edge, via STYLEBOT_BROWSER=edge) with the Stylebot extension
+// Launches Chrome (or Edge, via STYLEBOT_BROWSER=edge) with the NoBadFonts extension
 // and hot-reloads it on every rebuild.
 // Uses CDP instead of --load-extension since Chrome 137+ disabled that flag.
 
@@ -237,7 +237,7 @@ const extensionId = await loadExtension();
 
 const page = context.pages()[0] ?? (await context.newPage());
 
-// Without developer mode, chrome.runtime.reload() (which the CLI opt-in uses) disables
+// Without developer mode, chrome.runtime.reload() (which the dev build uses) disables
 // a CDP-loaded extension as one the Web Store can't review.
 await page.goto('chrome://extensions');
 await page.evaluate(() =>
@@ -248,7 +248,7 @@ await page.evaluate(() =>
 await page.goto(startUrl);
 
 console.log(
-  `\n🎉 Stylebot loaded on Hacker News (${channel}${
+  `\n🎉 NoBadFonts loaded on Hacker News (${channel}${
     locale ? `, ${locale}` : ''
   }) — extension id: ${extensionId}`
 );

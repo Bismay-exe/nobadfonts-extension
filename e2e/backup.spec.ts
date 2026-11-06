@@ -11,10 +11,10 @@ const style = (css: string) => ({
 });
 
 /**
- * Seeds styles from the options page, then reloads it on the Sync tab so the
- * Vue app reads them, as sync-tab.spec.ts does.
+ * Seeds styles from the options page, then reloads it on the Backup tab so
+ * the Vue app reads them.
  */
-const openSyncTab = async (
+const openBackupTab = async (
   page: Page,
   extension: Extension,
   styles: Record<string, unknown>
@@ -23,7 +23,7 @@ const openSyncTab = async (
   await page.evaluate(seeded => chrome.storage.local.set(seeded), { styles });
   await page.reload();
 
-  await page.getByRole('button', { name: 'Sync', exact: true }).click();
+  await page.getByRole('button', { name: 'Backup', exact: true }).click();
   await page.getByRole('heading', { name: 'Backup', exact: true }).waitFor();
 };
 
@@ -41,7 +41,7 @@ test.describe('Backup', () => {
     extension,
   }) => {
     const page = await context.newPage();
-    await openSyncTab(page, extension, { 'example.com': style('a {}') });
+    await openBackupTab(page, extension, { 'example.com': style('a {}') });
 
     const downloading = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export', exact: true }).click();
@@ -50,11 +50,11 @@ test.describe('Backup', () => {
     const backup = JSON.parse(text);
 
     expect(download.suggestedFilename()).toMatch(
-      /^stylebot-backup-\d{4}-\d{2}-\d{2}\.json$/
+      /^nobadfonts-backup-\d{4}-\d{2}-\d{2}\.json$/
     );
     expect(text).toBe(JSON.stringify(backup, null, 2));
     expect(backup).toMatchObject({
-      format: 'stylebot-backup',
+      format: 'nobadfonts-backup',
       version: 1,
       styles: { 'example.com': style('a {}') },
     });
@@ -65,7 +65,7 @@ test.describe('Backup', () => {
     extension,
   }) => {
     const page = await context.newPage();
-    await openSyncTab(page, extension, {
+    await openBackupTab(page, extension, {
       'example.com': style('a {}'),
       'local.example.org': style('b {}'),
     });

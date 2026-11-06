@@ -8,7 +8,7 @@ const meta: Meta = {
   title: 'Primitives/Links/SExternalLink',
   component: SExternalLink,
   argTypes: { label: { control: 'text' } },
-  args: { label: 'Stylebot Gallery' },
+  args: { label: 'NoBadFonts' },
 };
 
 export default meta;
@@ -17,16 +17,16 @@ const components = { SExternalLink, SText };
 
 export const Playground = playground(
   components,
-  `<s-external-link href="https://gallery.stylebot.dev">{{ label }}</s-external-link>`
+  `<s-external-link href="https://www.nobadfonts.in">{{ label }}</s-external-link>`
 );
 
 export const InContext = fromTemplate(
   components,
   `
   <s-text size="large">
-    Share this style in the
-    <s-external-link href="https://gallery.stylebot.dev">Stylebot Gallery</s-external-link>,
-    where anyone can install it.
+    Browse the catalog at
+    <s-external-link href="https://www.nobadfonts.in">NoBadFonts</s-external-link>,
+    where every font is checked for complete language support.
   </s-text>
 `
 );

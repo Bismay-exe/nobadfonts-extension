@@ -2,7 +2,6 @@ import type {
   OpenOptionsPage,
   OpenShortcutsPage,
   OpenReportIssuePage,
-  OpenDonatePage,
 } from '@stylebot/types';
 
 export const openOptionsPage = (route?: string): void => {
@@ -22,14 +21,6 @@ export const openShortcutsPage = (): void => {
 export const openReportIssuePage = (): void => {
   const message: OpenReportIssuePage = {
     name: 'OpenReportIssuePage',
-  };
-
-  chrome.runtime.sendMessage(message);
-};
-
-export const openDonatePage = (): void => {
-  const message: OpenDonatePage = {
-    name: 'OpenDonatePage',
   };
 
   chrome.runtime.sendMessage(message);

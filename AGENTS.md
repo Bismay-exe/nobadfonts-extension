@@ -1,25 +1,21 @@
-# Stylebot
+# NoBadFonts
 
-Browser extension (Chrome/Edge/Firefox) that lets users change the appearance of any website via a visual CSS editor. Vue 2 + TypeScript, built with webpack.
+Browser extension (Chrome/Edge/Firefox) that lets users change the fonts and CSS of any website via a visual editor. Vue 2 + TypeScript, built with webpack.
 
 ## Structure
 
-- `src/` — extension source, grouped into tiers. Each folder directly inside a tier is a package, imported as `@stylebot/<folder>` (resolved by `scripts/lib/src-packages.js`; `@stylebot/inject-css` keeps its old name for `apps/content`):
-  - `src/apps/` — webpack entries and HTML pages: `background`, `popup`, `options`, `editor` (with the pop-out window in `editor/window`), `content` (the content script), `reader` (the readability UI bundle), `cli-inspector` (what the CLI reads and does on a page, loaded on its first request), `side-panel-default` (the manifest's default side panel, which closes itself; only Vivaldi shows it), `monaco-iframe`
-  - `src/features/` — capabilities shared by apps: `sync`, `history`, `page-bridge`, `highlighter`, `google-fonts`, `readability` (eligibility and reader lifecycle), `side-panel` (the editor's side panel and its optional permission), `monaco-editor`
+- `src/` — extension source, grouped into tiers. Each folder directly inside a tier is a package, imported as `@stylebot/<folder>` (resolved by `scripts/lib/src-packages.js`; these internal names are kept from the upstream codebase):
+  - `src/apps/` — webpack entries and HTML pages: `background`, `popup`, `options`, `editor` (with the pop-out window in `editor/window`), `content` (the content script), `reader` (the readability UI bundle), `auth` (the OAuth callback page), `side-panel-default` (the manifest's default side panel, which closes itself; only Vivaldi shows it), `monaco-iframe`
+  - `src/features/` — capabilities shared by apps: `history`, `page-bridge`, `highlighter`, `google-fonts`, `readability` (eligibility and reader lifecycle), `side-panel` (the editor's side panel and its optional permission), `monaco-editor`, `no-bad-fonts`
   - `src/ui/` — `components`, `icons`, `scss`
-  - `src/core/` — `css`, `stylesheets`, `saved-styles`, `types`, `settings`, `i18n`, `google-auth` (Google sign-in, shared by sync and the gallery), `utils`
+  - `src/core/` — `css`, `stylesheets`, `saved-styles`, `types`, `settings`, `i18n`, `account` (OAuth sign-in and token storage), `utils`
   - `src/assets/` — `manifest` (base manifest, a module per browser that extends it, and the dev store keys), `icon` (the extension icon: SVG sources and the PNGs the build copies to `img/`), `fonts`, `_locales` (i18n strings per locale)
 - Imports only point down: apps → features, ui, core; features → ui, core; ui → ui, core; core → core. Nothing imports an app, and features don't import each other. The `stylebot/tier-imports` lint rule enforces this; the few imports that predate it are allowlisted in `eslint/rules/tier-imports.mjs` — remove entries, never add them.
-- `tools/cli/` — the `stylebot` command line (`yarn stylebot`), which drives the extension in a running browser through a native messaging host, once it's turned on in Stylebot's options; see `docs/cli.md`
-- `tools/claude-plugin/` — the Claude Code plugin: a `/stylebot` skill for restyling pages with the CLI, listed in the repo's `.claude-plugin/marketplace.json`
-- `evals/styling/` — `yarn eval:styling`, which compares how well Claude restyles recorded pages through the `/stylebot` skill and the CLI between two versions, running the agent in headless Claude Code; see `docs/styling-evals.md`
 - `e2e/` — Playwright end-to-end tests, driven against a real built extension: via CDP (`Extensions.loadUnpacked`) on Chrome/Edge, via Firefox's remote debugging protocol on Firefox; engine-specific code lives in `e2e/chromium/` and `e2e/firefox/` behind the `e2e/engine.ts` contract
 - `jest/` — Jest setup and the stylesheet stub
 - `dist/` — Chrome/Edge build output; `firefox-dist/` — Firefox build output; `preview-dist/` — `yarn build:preview` output
-- `store/` — store listing art (promo tiles, screenshots) per store; not part of the build. `yarn capture:store` retakes the screenshots; `store/video/` makes the demo video (see its README)
-- `captures/` — git-ignored output of the `capture:*` scripts that shoot screenshots for stylebot.dev, whose source is its own repo, [stylebot-site](https://github.com/ankit/stylebot-site); copy them into that repo by hand
-- `docs/` — developer docs: setup, releases, translation, e2e, architecture (editor, side panel, selectors, CSS, readability, profiles, sync)
+- `store/` — store listing art (promo tiles, screenshots) per store; not part of the build. `yarn capture:store` retakes the screenshots
+- `docs/` — developer docs: setup, releases, translation, e2e, architecture (editor, side panel, selectors, CSS, readability, profiles, account)
 - `patches/` — patch-package patches applied to dependencies on install
 
 ## Workflow
@@ -32,7 +28,7 @@ asks for one.
 - `yarn watch` — build for Chrome/Edge in watch mode
 - `yarn watch:firefox` — build for Firefox in watch mode
 - `yarn build:preview` — production build for local testing (not release) into `preview-dist/`, with the store's public key so it gets the store id
-- `yarn preview:chrome` / `preview:edge` / `preview:firefox` / `preview:safari` — production build, then launch it in that browser. Production builds need `STYLEBOT_GOOGLE_CLIENT_SECRET`, the Desktop OAuth client's secret that Drive sign-in uses
+- `yarn preview:chrome` / `preview:edge` / `preview:firefox` — production build, then launch it in that browser. Production builds need `NOBADFONTS_OAUTH_CLIENT_ID`, the public OAuth client id that account sign-in uses
 - `yarn dev:chrome` — watch + launch a Chrome instance with the extension loaded
 - `yarn dev:chrome:locale <locale>` — the same, with the browser and extension in another language (e.g. `vi`), in its own profile
 - `yarn lint` / `yarn lint:fix` — ESLint
@@ -40,9 +36,7 @@ asks for one.
 - `yarn test` — Jest unit tests
 - `yarn e2e` — builds the extension then runs the Playwright e2e suite headless on Chrome, as CI does. `--edge` / `--firefox` switch browser, `--headed` / `--ui` / `--debug` switch mode, `--no-build` skips the rebuild; see `docs/e2e.md`.
 - `yarn test:storybook` — builds Storybook and runs every story headless with `@storybook/test-runner`, asserting the `play` functions. `--no-build` reuses `storybook-static`; `--dev --watch <path>` runs against a `yarn storybook` already on :6006.
-- `yarn capture:store` — builds the extension and retakes the store screenshots in `store/screenshots/` on live sites, headless; `--only <name>` retakes some. Use the `capture-store` skill, which checks each image.
-- `yarn capture:gallery` — builds the extension and retakes the stylebot.dev gallery's theme screenshots into `captures/gallery/` (or `--out <dir>`), headless, from the themes in a sibling stylebot-site checkout's `src/assets/gallery/` (or `--themes <dir>`); `hn/newspaper` or `hn` retakes some. Use the `capture-gallery` skill, which checks each image.
-- `yarn capture:manual` — builds the extension and retakes the stylebot.dev manual's and 4.0 release page's screenshots into `captures/manual/` (or `--out <dir>`), light and dark, headless; `sync history` retakes some. Check each image before committing.
+- `yarn capture:store` — builds the extension and retakes the store screenshots in `store/screenshots/` headless; `--only <name>` retakes some. The capture themes live in `scripts/capture/*.css`.
 - `yarn storybook` — Storybook 7.6 (last line with Vue 2 support) for the shared primitives and popup/options/editor composites, with a light/dark toolbar
 
 ## Validation

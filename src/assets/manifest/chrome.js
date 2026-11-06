@@ -1,5 +1,4 @@
 const base = require('./manifest.json');
-const { signInPage } = require('./shared');
 
 // Chrome and Edge share this manifest.
 module.exports = {
@@ -15,13 +14,7 @@ module.exports = {
     'declarativeNetRequestWithHostAccess',
   ],
 
-  optional_permissions: ['sidePanel', 'nativeMessaging'],
+  optional_permissions: ['sidePanel'],
 
   host_permissions: [...base.host_permissions, '<all_urls>'],
-
-  web_accessible_resources: [
-    ...base.web_accessible_resources,
-    signInPage,
-    { resources: ['cli-inspector/index.js'], matches: ['<all_urls>'] },
-  ],
 };

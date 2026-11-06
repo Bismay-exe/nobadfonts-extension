@@ -14,13 +14,11 @@ import {
   ensureCompiledStyles,
   setActiveProfile,
   createProfile,
-  installProfile,
   renameProfile,
   deleteProfile,
   deleteStyle,
 } from './styles';
 import * as styleStorage from './styles';
-import { isStylebotSite } from './is-stylebot-site';
 
 import {
   get as getOption,
@@ -37,8 +35,6 @@ import type {
   SetActiveProfile as SetActiveProfileType,
   CreateProfile as CreateProfileType,
   CreateProfileResponse,
-  InstallStyle as InstallStyleType,
-  InstallStyleResponse,
   RenameProfile as RenameProfileType,
   DeleteProfile as DeleteProfileType,
   DeleteStyle as DeleteStyleType,
@@ -53,8 +49,6 @@ import type {
   GetCompiledStylesResponse,
   GetGoogleWebFontExists as GetGoogleWebFontExistsType,
   GetWebFontFile as GetWebFontFileType,
-  RunGoogleDriveSync as RunGoogleDriveSyncType,
-  GoogleSignInRedirect as GoogleSignInRedirectType,
   ScanVersionHistory as ScanVersionHistoryType,
   RestoreVersion as RestoreVersionType,
   UndoRestore as UndoRestoreType,
@@ -76,7 +70,6 @@ import type {
   GetImportCssResponse,
   GetGoogleWebFontExistsResponse,
   GetWebFontFileResponse,
-  RunGoogleDriveSyncResponse,
   ScanVersionHistoryResponse,
   RestoreVersionResponse,
   UndoRestoreResponse,
@@ -84,8 +77,6 @@ import type {
   GetRecentColorsResponse,
   AddRecentColorResponse,
 } from '@stylebot/types';
-import { handleSignInRedirect } from '@stylebot/google-auth';
-import { syncStyles } from './sync';
 
 import {
   scanVersionHistory,
@@ -157,43 +148,6 @@ export const CreateProfile = async (
   });
 
   sendResponse({ profileId });
-  return applyStylesToAllTabs();
-};
-
-const MAX_INSTALL_CSS_LENGTH = 100_000;
-const MAX_INSTALL_NAME_LENGTH = 60;
-
-const isNonEmptyString = (value: unknown, maxLength: number) =>
-  typeof value === 'string' &&
-  value.trim().length > 0 &&
-  value.length <= maxLength;
-
-/**
- * Installs a gallery style from stylebot.dev or its gallery as a new profile
- * of its site's style. Anything not sent from the site's bridge is refused.
- */
-export const InstallStyle = async (
-  message: InstallStyleType,
-  sender: chrome.runtime.MessageSender,
-  sendResponse: (response: InstallStyleResponse) => void
-): Promise<void> => {
-  if (
-    sender.id !== chrome.runtime.id ||
-    !isStylebotSite(sender.url) ||
-    !isNonEmptyString(message.url, 2048) ||
-    !isNonEmptyString(message.profileName, MAX_INSTALL_NAME_LENGTH) ||
-    !isNonEmptyString(message.css, MAX_INSTALL_CSS_LENGTH)
-  ) {
-    sendResponse({});
-    return;
-  }
-
-  const profile = await installProfile(message.url.trim(), {
-    name: message.profileName.trim(),
-    css: message.css,
-  });
-
-  sendResponse({ profileName: profile.name });
   return applyStylesToAllTabs();
 };
 
@@ -291,12 +245,10 @@ export const OpenShortcutsPage = (): void => {
   chrome.tabs.create({ url: `${scheme}://extensions/shortcuts` });
 };
 
-export const OpenDonatePage = (): void => {
-  chrome.tabs.create({ url: 'https://ko-fi.com/stylebot' });
-};
-
 export const OpenReportIssuePage = (): void => {
-  chrome.tabs.create({ url: 'https://github.com/ankit/stylebot/issues' });
+  chrome.tabs.create({
+    url: 'https://github.com/Bismay-exe/nobadfonts-extension/issues',
+  });
 };
 
 export const SetOption = (message: SetOptionType): void => {
@@ -380,48 +332,6 @@ export const GetWebFontFile = async (
   sendResponse: (response: GetWebFontFileResponse) => void
 ): Promise<void> => {
   sendResponse(await getWebFontFile(message.url));
-};
-
-/**
- * Handles Google's sign-in redirect, then syncs: the run that opened the
- * tab may have gone with a background unloaded while the user was on
- * Google's page.
- */
-export const syncAfterSignInRedirect = async (
-  url: string,
-  tabId?: number
-): Promise<void> => {
-  const signedIn = await handleSignInRedirect(url, tabId);
-  if (signedIn) {
-    syncStyles({ interactive: false });
-  }
-};
-
-export const GoogleSignInRedirect = (
-  message: GoogleSignInRedirectType,
-  sender: chrome.runtime.MessageSender
-): Promise<void> => syncAfterSignInRedirect(message.url, sender.tab?.id);
-
-export const RunGoogleDriveSync = async (
-  message: RunGoogleDriveSyncType,
-  sendResponse: (response: RunGoogleDriveSyncResponse) => void
-): Promise<void> => {
-  try {
-    sendResponse(
-      await syncStyles({
-        interactive: message.interactive ?? true,
-      })
-    );
-  } catch (e) {
-    // runGoogleDriveSync already returns failures as a result, so this only
-    // fires if that contract breaks. Left in because a missed sendResponse
-    // leaves the caller's spinner stuck until its page is reloaded.
-    sendResponse({
-      ok: false,
-      errorKey: 'sync_error_unknown',
-      errorDetail: e instanceof Error ? e.message : undefined,
-    });
-  }
 };
 
 export const ScanVersionHistory = async (

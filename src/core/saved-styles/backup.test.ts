@@ -150,7 +150,7 @@ describe('mergeBackup', () => {
 describe('getBackupFilename', () => {
   it('names the backup after the local date, zero-padded', () => {
     expect(getBackupFilename(new Date(2026, 0, 5, 23, 30))).toBe(
-      'stylebot-backup-2026-01-05.json'
+      'nobadfonts-backup-2026-01-05.json'
     );
   });
 });

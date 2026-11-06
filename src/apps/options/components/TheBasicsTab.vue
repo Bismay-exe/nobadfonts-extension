@@ -6,10 +6,7 @@
       <the-theme />
       <the-position />
       <the-context-menu />
-      <the-gallery-suggestions />
     </s-list>
-
-    <the-cli-access v-if="showCliAccess" />
 
     <the-keyboard-shortcuts />
   </div>
@@ -19,12 +16,9 @@
 import Vue from 'vue';
 
 import { SHeading, SList } from '@stylebot/components';
-import { supportsCLI } from '@stylebot/settings';
 import TheTheme from './basics/TheTheme.vue';
 import ThePosition from './basics/ThePosition.vue';
 import TheContextMenu from './basics/TheContextMenu.vue';
-import TheGallerySuggestions from './basics/TheGallerySuggestions.vue';
-import TheCliAccess from './basics/TheCliAccess.vue';
 import TheKeyboardShortcuts from './basics/TheKeyboardShortcuts.vue';
 
 export default Vue.extend({
@@ -36,16 +30,10 @@ export default Vue.extend({
     TheTheme,
     ThePosition,
     TheContextMenu,
-    TheGallerySuggestions,
-    TheCliAccess,
     TheKeyboardShortcuts,
   },
 
   computed: {
-    showCliAccess(): boolean {
-      return supportsCLI();
-    },
-
     optionsLoaded(): boolean {
       return !!this.$store.state.options;
     },

@@ -28,8 +28,8 @@ const DIVIDER = { light: '#d9d9de', dark: '#2c2f35' };
 export const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Chrome launch options shared by the extension browser and the CLI's: hi-dpi,
- * so the shots are sharp once scaled to the store's size.
+ * Chrome launch options shared by the extension browser and the capture
+ * scripts: hi-dpi, so the shots are sharp once scaled to the store's size.
  */
 export const launchOptions = ({ appearance, env }) => ({
   headless: true,
@@ -61,7 +61,7 @@ export const loadExtension = async (context, dir) => {
 export const closeWelcomeTabs = context =>
   context.on('page', page =>
     page.once('framenavigated', () => {
-      if (page.url().includes('stylebot.dev/welcome')) {
+      if (page.url() === 'https://www.nobadfonts.in/') {
         page.close().catch(() => {});
       }
     })
@@ -239,49 +239,6 @@ export const fitPopup = async popup => {
   const height = await popup.evaluate(() => document.body.scrollHeight);
   await popup.setViewportSize({ width: POPUP_WIDTH, height });
 };
-
-/**
- * Answers the extension's Gallery API requests with these styles, for a
- * site, instead of the live Gallery's. `total` is how many the site has.
- */
-export const stubGallery = (browser, site, styles, total = styles.length) =>
-  browser.evaluate(
-    ({ site, styles, total }) => {
-      const realFetch = globalThis.fetch;
-      const json = body =>
-        new Response(JSON.stringify(body), {
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-      globalThis.fetch = (input, init) => {
-        const url = new URL(typeof input === 'string' ? input : input.url);
-
-        if (url.hostname !== 'api.stylebot.dev') {
-          return realFetch(input, init);
-        }
-
-        const id = Number(url.pathname.match(/\/styles\/(\d+)$/)?.[1]);
-
-        if (url.pathname.endsWith('/sites/hosts')) {
-          return Promise.resolve(json({ hosts: [site] }));
-        }
-
-        if (url.pathname.endsWith('/styles')) {
-          const listed = styles.map(({ css: _css, ...style }) => style);
-          return Promise.resolve(
-            json({ styles: listed, total, nextOffset: null })
-          );
-        }
-
-        if (id) {
-          return Promise.resolve(json(styles.find(style => style.id === id)));
-        }
-
-        return Promise.resolve(new Response(null, { status: 404 }));
-      };
-    },
-    { site, styles, total }
-  );
 
 /**
  * Stops the inspector the side panel opens with, and switches to a tab.

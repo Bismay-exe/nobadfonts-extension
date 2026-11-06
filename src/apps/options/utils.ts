@@ -10,8 +10,6 @@ import type {
   GetCommands,
   GetCommandsResponse,
   StyleMap,
-  RunGoogleDriveSync,
-  RunGoogleDriveSyncResponse,
   VersionHistory,
   ScanVersionHistory,
   ScanVersionHistoryResponse,
@@ -22,9 +20,6 @@ import type {
   UndoRestore,
   UndoRestoreResponse,
   ReloadForSidePanelGrant,
-  GetGalleryStyle,
-  PublishProfileToGallery,
-  GetGalleryStyleResponse,
 } from '@stylebot/types';
 import { requestSidePanelPermission } from '@stylebot/side-panel';
 
@@ -92,30 +87,6 @@ export const getCommands = (): Promise<GetCommandsResponse> => {
 
   return chrome.runtime.sendMessage<GetCommands, GetCommandsResponse>(message);
 };
-
-export const runGoogleDriveSync =
-  async (): Promise<RunGoogleDriveSyncResponse> => {
-    const message: RunGoogleDriveSync = {
-      name: 'RunGoogleDriveSync',
-    };
-
-    try {
-      const response = await chrome.runtime.sendMessage<
-        RunGoogleDriveSync,
-        RunGoogleDriveSyncResponse | undefined
-      >(message);
-
-      // A service worker torn down mid-sync answers with undefined. Without
-      // this the caller would treat that as a result.
-      return response ?? { ok: false, errorKey: 'sync_error_unknown' };
-    } catch (e) {
-      return {
-        ok: false,
-        errorKey: 'sync_error_unknown',
-        errorDetail: e instanceof Error ? e.message : undefined,
-      };
-    }
-  };
 
 /**
  * A torn-down worker answering with undefined is read as an empty history,
@@ -191,29 +162,4 @@ export const grantSidePanel = (): void => {
       chrome.runtime.sendMessage(message);
     }
   });
-};
-
-export const getGalleryStyle = (
-  styleId: number
-): Promise<GetGalleryStyleResponse> =>
-  chrome.runtime.sendMessage<GetGalleryStyle, GetGalleryStyleResponse>({
-    name: 'GetGalleryStyle',
-    styleId,
-  });
-
-/**
- * Opens a draft of a profile on the gallery's publish page, without a
- * screenshot, since there's no page here to capture.
- */
-export const publishProfileToGallery = (
-  url: string,
-  profileId: string
-): void => {
-  const message: PublishProfileToGallery = {
-    name: 'PublishProfileToGallery',
-    url,
-    profileId,
-  };
-
-  chrome.runtime.sendMessage(message);
 };

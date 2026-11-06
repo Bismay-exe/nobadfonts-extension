@@ -18,6 +18,10 @@ import type { AccountState, SessionStore, StoredSession } from './types';
 
 const REFRESH_BEFORE_MS = 60 * 1000;
 
+// One refresh per store at a time: two callers that both see a session near
+// expiry must not spend the same rotating refresh token twice.
+const refreshes = new WeakMap<SessionStore, Promise<StoredSession | null>>();
+
 export type AccountDeps = {
   config: AccountConfig | null;
   supported: boolean;
@@ -44,6 +48,26 @@ export const defaultAccountDeps = (): AccountDeps => {
   };
 };
 
+/**
+ * The auth window is handed back the browser's own redirect address. Checking
+ * it here keeps a browser that answers with something else from feeding a
+ * code into the exchange.
+ */
+const cameBackTo = (responseUrl: string, redirectUri: string): boolean => {
+  try {
+    const response = new URL(responseUrl);
+    const expected = new URL(redirectUri);
+
+    return (
+      response.protocol === expected.protocol &&
+      response.host === expected.host &&
+      response.pathname === expected.pathname
+    );
+  } catch {
+    return false;
+  }
+};
+
 const blocked = (deps: AccountDeps): AccountState | null => {
   if (!deps.config) {
     return { status: 'unavailable', reason: 'not-configured' };
@@ -62,16 +86,46 @@ const signedIn = (session: StoredSession): AccountState => ({
   expiresAt: session.expiresAt,
 });
 
+const needsRenewal = (deps: AccountDeps, session: StoredSession): boolean =>
+  session.expiresAt - deps.now() <= REFRESH_BEFORE_MS;
+
 /**
- * Renews the access token when it is about to expire. A connection that
- * fails leaves the session for the next try; a grant the server no longer
- * knows means the account was disconnected elsewhere, so the session goes.
+ * A lost reply can arrive after the server rotated the refresh token. Supabase
+ * reuses a rotated token for a short window, so one immediate retry usually
+ * recovers instead of leaving the account signed out.
  */
-const renew = async (
-  deps: AccountDeps,
-  session: StoredSession
+const refreshTokens = async (
+  config: AccountConfig,
+  refreshToken: string
+): Promise<Awaited<ReturnType<typeof refreshSession>>> => {
+  try {
+    return await refreshSession(config, refreshToken);
+  } catch (error) {
+    if (isAccountError(error) && error.code === 'network') {
+      return refreshSession(config, refreshToken);
+    }
+
+    throw error;
+  }
+};
+
+const isRevoked = (error: unknown): boolean =>
+  isAccountError(error) && error.oauthError === 'invalid_grant';
+
+/**
+ * Re-reads the session under the lock, so a refresh another caller finished
+ * first is reused rather than repeated with an already-rotated token.
+ */
+const renewLocked = async (
+  deps: AccountDeps
 ): Promise<StoredSession | null> => {
-  if (session.expiresAt - deps.now() > REFRESH_BEFORE_MS) {
+  const session = await deps.store.read();
+
+  if (!session) {
+    return null;
+  }
+
+  if (!needsRenewal(deps, session)) {
     return session;
   }
 
@@ -81,20 +135,53 @@ const renew = async (
   }
 
   try {
-    const tokens = await refreshSession(
+    const tokens = await refreshTokens(
       deps.config as AccountConfig,
       session.refreshToken
     );
+    const renewed = renewSession(session, tokens, deps.now());
 
-    return renewSession(session, tokens, deps.now());
+    await deps.store.write(renewed);
+    return renewed;
   } catch (error) {
-    if (isAccountError(error) && error.code === 'network') {
-      return session;
+    // Only a grant the server no longer honours ends the session. A 5xx, a
+    // malformed reply or another OAuth error is worth trying again later.
+    if (isRevoked(error)) {
+      await deps.store.clear();
+      return null;
     }
 
-    await deps.store.clear();
-    return null;
+    return session;
   }
+};
+
+/**
+ * Renews the access token when it is about to expire. A connection that
+ * fails leaves the session for the next try; a grant the server no longer
+ * knows means the account was disconnected elsewhere, so the session goes.
+ */
+const renew = (
+  deps: AccountDeps,
+  session: StoredSession
+): Promise<StoredSession | null> => {
+  if (!needsRenewal(deps, session)) {
+    return Promise.resolve(session);
+  }
+
+  const inFlight = refreshes.get(deps.store);
+
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const refresh = renewLocked(deps).finally(() => {
+    if (refreshes.get(deps.store) === refresh) {
+      refreshes.delete(deps.store);
+    }
+  });
+  refreshes.set(deps.store, refresh);
+
+  return refresh;
 };
 
 const readSession = async (
@@ -106,13 +193,7 @@ const readSession = async (
     return null;
   }
 
-  const renewed = await renew(deps, session);
-
-  if (renewed && renewed !== session) {
-    await deps.store.write(renewed);
-  }
-
-  return renewed;
+  return renew(deps, session);
 };
 
 /**
@@ -170,6 +251,13 @@ export const signIn = async (
     throw new AccountError('exchange-failed', 'Unreadable sign-in redirect');
   }
 
+  if (!cameBackTo(responseUrl, deps.redirectUri)) {
+    throw new AccountError(
+      'exchange-failed',
+      'The sign-in returned to another address'
+    );
+  }
+
   if (params.get('state') !== state) {
     throw new AccountError(
       'state-mismatch',
@@ -204,6 +292,13 @@ export const signIn = async (
     }),
     deps.now()
   );
+  const inFlight = refreshes.get(deps.store);
+
+  // A refresh that started before this sign-in must not write its older
+  // session over the one the sign-in just obtained.
+  if (inFlight) {
+    await inFlight.catch(() => undefined);
+  }
 
   await deps.store.write(session);
 
@@ -217,5 +312,13 @@ export const signIn = async (
 export const signOut = async (
   deps: AccountDeps = defaultAccountDeps()
 ): Promise<void> => {
+  // A refresh already on its way would otherwise write a session back after
+  // the clear. Let it finish, then clear what it stored.
+  const inFlight = refreshes.get(deps.store);
+
+  if (inFlight) {
+    await inFlight.catch(() => undefined);
+  }
+
   await deps.store.clear();
 };

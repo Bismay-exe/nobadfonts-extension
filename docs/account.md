@@ -8,6 +8,8 @@ The identity provider is the NoBadFonts Supabase project, using its OAuth Server
 
 The extension's OAuth client is registered as public (`token_endpoint_auth_method` `none`), so the token request carries the code, the verifier and `client_id` — never a secret. Dynamic client registration stays off: only the extension's own client may ask for a grant.
 
+Supabase signs tokens with ES256. The project's published JWKS (`/auth/v1/.well-known/jwks.json`) carries a single P-256 key, `kid 3ccfc8a5-090a-4ba9-9923-66a9d02f7930`. The extension does not verify the ID token's signature itself: it receives the token directly from the token endpoint over TLS after the PKCE exchange, so the TLS channel, not a locally checked signature, is what ties the claims to the request.
+
 ## Sign-in
 
 `StartNoBadFontsSignIn` opens `auth/index.html` in a tab, and that page sends `NoBadFontsSignInReady`, which is where the background runs the flow:
@@ -25,13 +27,17 @@ The auth tab is the only sender allowed to start or finish a sign-in, and `isExt
 
 The background keeps the session in the extension's own IndexedDB: access token, refresh token, expiry, granted scope, and the account from the ID token's claims. It is not `chrome.storage.local`, which content scripts can read; the background's IndexedDB is not reachable from a content script or a page.
 
-`getAccount` renews a token a minute before it expires and stores the rotated refresh token. A renewal that cannot reach the server keeps the session and tries again later; one the server refuses (`invalid_grant`) clears it, which is how a grant revoked on the site ends a session here.
+`getAccount` renews a token a minute before it expires and stores the rotated refresh token. Only an `invalid_grant` reply clears the session, which is how a grant revoked on the site ends a session here. A network failure is retried once immediately: a lost reply may have rotated the refresh token already, and Supabase reuses a rotated token for a short window. A 5xx, a malformed reply or any other OAuth error leaves the session in place and tries again on the next read.
+
+Refreshes are serialized per session store. Callers that arrive while one is running share its result, and the refresh re-reads the stored session under the lock before spending the refresh token. Sign-in and sign-out wait for a refresh already in flight, so a late reply cannot write a session back after sign-out or over a newer sign-in.
 
 The popup and the options tab only ever ask the background for the account state; they never see a token.
 
 ## Signing out
 
 `NoBadFontsSignOut` clears this browser's session and nothing else. Disconnecting the extension everywhere is a grant revocation on the site's `/settings/connected-apps` page, which both pages link to.
+
+Revocation takes effect at the next refresh. An access token already issued stays valid until its `exp` — one hour by default — so the extension can keep reporting a signed-in account for up to that long after the grant is revoked.
 
 Website sign-out used to be global; it now uses `scope: 'local'` so signing out of the site does not end the extension's session, and the two can be used independently.
 
@@ -41,11 +47,20 @@ None are read or enforced yet. The design, for when premium lands: a table keyed
 
 ## Browsers
 
-Chrome, Edge and Firefox sign in. Their redirect URIs are the browsers' own `chromiumapp.org` and `extensions.allizom.org` addresses for the built extension, and each has to be registered on the client before release. Safari is deferred: its wrapper has no supported auth window here, so the popup and the options tab report that sign-in is unavailable rather than failing.
+Chrome, Edge and Firefox sign in. Chrome and Edge use the built extension's `chromiumapp.org` address; Firefox uses the `mzoauth2` loopback address derived from the add-on id. Each has to be registered on the client before release.
+
+- Firefox add-on id: `nobadfonts@nobadfonts.in`
+- Firefox redirect: `http://127.0.0.1/mozoauth2/9a30e7adef8fda1f39d1c414feb6315225c648d3`
+- Local Chrome and Edge build id: `ccnipcpngemmggbkipemelphadkkkfgk`
+- Local Chrome and Edge redirect: `https://ccnipcpngemmggbkipemelphadkkkfgk.chromiumapp.org/`
+
+The Chromium id comes from the temporary development key in `manifest-dev.json` and `manifest-edge-dev.json`. It is for local development only; each store listing's own id and key replace it before release. Safari is deferred: its wrapper has no supported auth window here, so the popup and the options tab report that sign-in is unavailable rather than failing.
 
 ## Configuration
 
-- `NOBADFONTS_OAUTH_CLIENT_ID` — read at build time, with no default, so a build that was not registered shows the clean "isn't set up" state instead of a broken flow.
+The build reads `.env.local`, then `.env`, from the extension folder. Shell variables win over both. See `scripts/supabase/README.md` for registering the client; creating one through SQL is not supported.
+
+- `NOBADFONTS_OAUTH_CLIENT_ID` — read at build time, with no default, so a build that was not registered shows the clean "isn't set up" state instead of a broken flow. A production build outside CI fails when it is missing or not a UUID.
 - `NOBADFONTS_SUPABASE_URL`, `NOBADFONTS_SUPABASE_ANON_KEY` — development-build overrides only, for a local Supabase. Release builds use the production project, which `src/core/account/config.ts` carries as fallbacks.
 
 A development build adds `http://127.0.0.1:54321/*` to its host permissions for that local project.

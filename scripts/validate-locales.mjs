@@ -47,7 +47,7 @@ const TEXT_PROPERTY =
 
 // Literals that read the same in every language: the name, a typography
 // glyph, an example domain and a CSS keyword.
-const UNTRANSLATED_TEXT = new Set(['Stylebot', 'Aa', 'example.com', 'none']);
+const UNTRANSLATED_TEXT = new Set(['NoBadFonts', 'Aa', 'example.com', 'none']);
 
 const isText = value =>
   /[A-Za-z]{2,}/.test(value) && !UNTRANSLATED_TEXT.has(value.trim());
@@ -228,7 +228,6 @@ function placeholderNames(message) {
 const SAME_IN_EVERY_LANGUAGE = new Set([
   'language_code',
   'github',
-  'google_drive',
   'x_and_y',
   'image_size_kb',
   'editor_window_title',

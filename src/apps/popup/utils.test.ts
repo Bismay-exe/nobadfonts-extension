@@ -1,11 +1,9 @@
 import { getPageSupport } from '@stylebot/utils';
-import type { GetPublishedGalleryStyleResponse } from '@stylebot/types';
 
 import {
   getCommands,
   getOption,
   getRestoredPageSupport,
-  getPublishMenuItem,
   getStyles,
   onEnterOrSpace,
   openStylebotSidePanel,
@@ -264,36 +262,6 @@ describe('openStylebotSidePanel', () => {
 
     expect(api.tabs.sendMessage).toBeCalledWith(7, {
       name: 'ToggleStylebot',
-    });
-  });
-});
-
-describe('getPublishMenuItem', () => {
-  const answer = (response: GetPublishedGalleryStyleResponse) => {
-    global.chrome = {
-      runtime: { sendMessage: jest.fn(async () => response) },
-    } as unknown as typeof chrome;
-  };
-
-  it('offers what the editor offers for a style of yours', async () => {
-    answer({ published: null, installed: null });
-
-    expect(await getPublishMenuItem('example.com', 'p', 'h1 {}')).toEqual({
-      label: 'publish_to_gallery',
-      changed: false,
-    });
-  });
-
-  it("links someone else's installed style to its Gallery page", async () => {
-    answer({
-      published: null,
-      installed: { id: 2, slug: 's', cssHash: 'abc' },
-    });
-
-    expect(await getPublishMenuItem('example.com', 'p', 'h1 {}')).toEqual({
-      label: 'view_in_gallery',
-      changed: false,
-      url: expect.stringMatching(/\/style\/2\/s$/),
     });
   });
 });

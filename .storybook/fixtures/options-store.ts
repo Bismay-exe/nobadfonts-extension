@@ -15,12 +15,9 @@ import type {
   StyleWithoutUrl,
   StylebotOptions,
   StylebotCommands,
-  SyncState,
   RestoreOptions,
 } from '@stylebot/types';
-import type { SyncStatus } from '@/apps/options/store';
 import {
-  runGoogleDriveSync,
   scanVersionHistory,
   restoreVersion,
   undoRestore,
@@ -30,11 +27,6 @@ export type OptionsState = {
   styles: StyleMap;
   options: StylebotOptions | null;
   commands: StylebotCommands;
-  googleDriveSyncEnabled: boolean;
-  googleDriveSyncState: SyncState | undefined;
-  googleDriveSyncNeedsAuth: boolean;
-  syncInProgress: boolean;
-  syncStatus: SyncStatus;
 };
 
 export type OptionsStateOverrides = Partial<Omit<OptionsState, 'options'>> & {
@@ -45,7 +37,6 @@ const NOOP_ACTIONS = [
   'getAllStyles',
   'getAllOptions',
   'getCommands',
-  'getGoogleDriveSyncMetadata',
   'deleteStyle',
   'deleteAllStyles',
   'enableStyle',
@@ -72,18 +63,6 @@ const editStyle = (
 
 const actions: ActionTree<OptionsState, OptionsState> = {
   ...Object.fromEntries(NOOP_ACTIONS.map(name => [name, noop])),
-
-  setGoogleDriveSyncEnabled({ state, dispatch }, enabled: boolean) {
-    state.googleDriveSyncEnabled = enabled;
-
-    if (enabled) {
-      return dispatch('syncWithGoogleDrive');
-    }
-
-    state.googleDriveSyncState = undefined;
-    state.googleDriveSyncNeedsAuth = false;
-    state.syncStatus = null;
-  },
 
   saveStyle(
     { state },
@@ -163,19 +142,6 @@ const actions: ActionTree<OptionsState, OptionsState> = {
     state.options = { ...(state.options as StylebotOptions), [name]: value };
   },
 
-  dismissSyncConflict({ state }, url: string) {
-    if (!state.googleDriveSyncState?.conflicts) {
-      return;
-    }
-
-    state.googleDriveSyncState = {
-      ...state.googleDriveSyncState,
-      conflicts: state.googleDriveSyncState.conflicts.filter(
-        conflict => conflict.url !== url
-      ),
-    };
-  },
-
   scanVersionHistory(
     _context,
     options: { limit?: number; site?: string } = {}
@@ -196,46 +162,11 @@ const actions: ActionTree<OptionsState, OptionsState> = {
   ) {
     return undoRestore(entryId, profileId);
   },
-
-  async syncWithGoogleDrive({ state }) {
-    if (state.syncInProgress) {
-      return;
-    }
-
-    state.syncInProgress = true;
-    state.syncStatus = null;
-
-    try {
-      const response = await runGoogleDriveSync();
-
-      if (response.ok) {
-        state.googleDriveSyncState = {
-          remoteRevision: response.metadata.modifiedTime,
-          localRevision: response.metadata.modifiedTime,
-          lastSyncedAt: new Date().toISOString(),
-          metadata: response.metadata,
-          conflicts: state.googleDriveSyncState?.conflicts,
-          account: state.googleDriveSyncState?.account,
-        };
-        state.googleDriveSyncNeedsAuth = false;
-      } else {
-        state.syncStatus = {
-          type: 'error',
-          messageKey: response.errorKey,
-          detail: response.errorDetail,
-        };
-      }
-    } finally {
-      state.syncInProgress = false;
-    }
-  },
 };
 
 /**
  * Options-page store seeded up front; the fetch actions App.vue's created()
- * calls are no-ops so the seeded state survives mount, but the sync actions
- * a story clicks through run for real against the chrome shim, so a sync
- * driven from a story behaves like it does in production.
+ * calls are no-ops so the seeded state survives mount.
  */
 export const createOptionsStore = (
   overrides: OptionsStateOverrides = {}
@@ -244,11 +175,6 @@ export const createOptionsStore = (
     state: {
       styles: {},
       commands: defaultCommands,
-      googleDriveSyncEnabled: false,
-      googleDriveSyncState: undefined,
-      googleDriveSyncNeedsAuth: false,
-      syncInProgress: false,
-      syncStatus: null,
       ...overrides,
       options: { ...defaultOptions, ...overrides.options },
     },

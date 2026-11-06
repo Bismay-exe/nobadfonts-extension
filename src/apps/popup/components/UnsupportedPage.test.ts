@@ -16,7 +16,7 @@ describe('UnsupportedPage.vue', () => {
     });
 
     expect(wrapper.text()).toContain('browser_settings');
-    expect(wrapper.text()).toContain('stylebot_cant_style_browser_pages');
+    expect(wrapper.text()).toContain('nobadfonts_cant_style_browser_pages');
     expect(wrapper.findComponent(OptionsButton).exists()).toBe(true);
   });
 
