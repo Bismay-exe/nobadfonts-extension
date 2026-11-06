@@ -12,6 +12,7 @@ Pull requests target `main`, and the release workflow only runs on pull requests
 - Squash-merge — the GitHub Release and its `vX.Y.Z` tag are then created automatically from the changelog entry
 - Build for the stores from that tag: `git fetch origin --tags && git checkout vX.Y.Z`. Packaging and uploading refuse to run anywhere else, and every production build starts from an empty output folder
 - Set `NOBADFONTS_OAUTH_CLIENT_ID` to the extension's registered public OAuth client UUID — the account needs it, and a production build outside CI fails without it
+- Without a local `zip`, run the `package` workflow from Actions (`ref` = the release tag). It builds on Ubuntu and uploads `nobadfonts-<version>-<commit>.zip` for Chrome and Edge plus the Firefox extension and source zips as a workflow artifact
 - Chrome and Edge: Run `yarn build` and manually create zip for distribution from `dist/`
 - Firefox: Run `yarn package:firefox` from a clean working tree. It stops if a JavaScript file is too large for AMO's linter to parse, and otherwise builds the extension and writes the extension zip and the source zip AMO asks for, with build steps for reviewers, to `release/`
 - To upload instead of zipping by hand, run each store's command from a clean working tree. Each builds what it uploads and publishes nothing; Chrome and Edge share one zip per commit in `release/`, so the second reuses the first's
