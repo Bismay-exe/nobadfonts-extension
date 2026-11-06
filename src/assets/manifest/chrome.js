@@ -6,13 +6,7 @@ module.exports = {
 
   side_panel: { default_path: 'side-panel-default/index.html' },
 
-  permissions: [
-    ...base.permissions,
-    'identity',
-    'favicon',
-    'scripting',
-    'declarativeNetRequestWithHostAccess',
-  ],
+  permissions: [...base.permissions, 'identity', 'favicon', 'scripting'],
 
   optional_permissions: ['sidePanel'],
 

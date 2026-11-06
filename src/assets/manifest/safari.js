@@ -12,7 +12,5 @@ module.exports = {
     },
   },
 
-  permissions: [...base.permissions, 'declarativeNetRequestWithHostAccess'],
-
   host_permissions: [...base.host_permissions],
 };

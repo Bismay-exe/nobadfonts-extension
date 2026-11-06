@@ -27,9 +27,6 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
       // the content scripts already match every site (checked against 3.2.4
       // with getPermissionWarningsByManifest on Chrome and Edge).
       'scripting',
-      // No warning either, checked the same way: its redirect only applies
-      // to hosts <all_urls> already covers.
-      'declarativeNetRequestWithHostAccess',
     ],
     host_permissions: [GOOGLE_FONTS_HOST, ...NO_BAD_FONTS_HOSTS, '<all_urls>'],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
@@ -46,20 +43,14 @@ const RELEASE_INSTALL_WARNING_FIELDS = {
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
   safari: {
-    permissions: [
-      'tabs',
-      'storage',
-      'contextMenus',
-      'unlimitedStorage',
-      'declarativeNetRequestWithHostAccess',
-    ],
+    permissions: ['tabs', 'storage', 'contextMenus', 'unlimitedStorage'],
     host_permissions: [GOOGLE_FONTS_HOST, ...NO_BAD_FONTS_HOSTS],
     content_script_matches: CONTENT_SCRIPT_MATCHES,
   },
 };
 
 const GUARD_MESSAGE = `A release manifest's required permissions, hosts or content script matches changed.
-Adding one shows a new install warning, and Chrome disables Stylebot for every existing user until they re-approve it.
+Adding one shows a new install warning, and Chrome disables NoBadFonts for every existing user until they re-approve it.
 Declare it in optional_permissions / optional_host_permissions and request it at runtime instead.
 Only update the expectation in this test deliberately, knowing what it does to existing users.`;
 
