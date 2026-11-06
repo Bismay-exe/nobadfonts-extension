@@ -40,7 +40,7 @@ test.beforeAll(async () => {
 
 test.afterAll(() => server.close());
 
-test('opening Stylebot from the popup opens the editor in the current tab', async ({
+test('opening NoBadFonts from the popup opens the editor in the current tab', async ({
   context,
   openPopup,
 }) => {

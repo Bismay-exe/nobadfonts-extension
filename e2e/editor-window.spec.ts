@@ -144,7 +144,7 @@ test('once undocked, the popup opens and closes the window', async ({
   await page.bringToFront();
   const popupAgain = await openPopup();
   const closeButton = popupAgain.locator('button', {
-    hasText: 'Close Stylebot',
+    hasText: 'Close NoBadFonts',
   });
   await expect.poll(() => closeButton.isVisible()).toBe(true);
 
