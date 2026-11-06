@@ -79,6 +79,8 @@ commit a secret.
 The Chrome and Edge public keys give the production extension IDs and their
 `https://<store-id>.chromiumapp.org/` redirect URIs. Register both redirect
 URIs on the same Supabase OAuth client, next to the development and Firefox
-ones. Record the final review pages as `NOBADFONTS_CHROME_REVIEW_URL`,
-`NOBADFONTS_EDGE_REVIEW_URL` and `NOBADFONTS_FIREFOX_REVIEW_URL` so the rating
-prompt links straight to the listing instead of the store search.
+ones. The package derives the redirect from its installed ID at runtime, so it
+does not need rebuilding after the URIs are registered. Record the final review
+pages as `NOBADFONTS_CHROME_REVIEW_URL`, `NOBADFONTS_EDGE_REVIEW_URL` and
+`NOBADFONTS_FIREFOX_REVIEW_URL` so the rating prompt links straight to the
+listing instead of the store search.
