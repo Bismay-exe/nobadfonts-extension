@@ -64,6 +64,19 @@ jobs:
           mkdir -p release
           (cd dist && zip -r -X -q "../release/NoBadFonts-${version}-Chromium-Extension.zip" . -x .build-complete)
 
+      # Tags cut before these packages were named after NoBadFonts still write
+      # their own names, so normalise whatever the tag produced.
+      - name: Name Firefox packages
+        run: |
+          set -euo pipefail
+          version="${{ steps.version.outputs.version }}"
+          if [ -f "release/nobadfonts-${version}-firefox.zip" ]; then
+            mv "release/nobadfonts-${version}-firefox.zip" "release/NoBadFonts-${version}-Firefox-Extension.zip"
+          fi
+          if [ -f "release/nobadfonts-${version}-source.zip" ]; then
+            mv "release/nobadfonts-${version}-source.zip" "release/NoBadFonts-${version}-Extension-Source.zip"
+          fi
+
       # A sideload build for use before either Chromium listing exists. The
       # development key fixes the extension id, so the OAuth redirect it derives
       # is already registered; a store build gets its id on first upload and
