@@ -64,16 +64,22 @@ jobs:
           mkdir -p release
           (cd dist && zip -r -X -q "../release/NoBadFonts-${version}-Chromium-Extension.zip" . -x .build-complete)
 
-      - name: Name packages
+      # A sideload build for use before either Chromium listing exists. The
+      # development key fixes the extension id, so the OAuth redirect it derives
+      # is already registered; a store build gets its id on first upload and
+      # must not carry a key. Everything else is the store build's output.
+      - name: Package Chromium sideload build
         run: |
           set -euo pipefail
           version="${{ steps.version.outputs.version }}"
-          if [ -f "release/nobadfonts-${version}-firefox.zip" ]; then
-            mv "release/nobadfonts-${version}-firefox.zip" "release/NoBadFonts-${version}-Firefox-Extension.zip"
-          fi
-          if [ -f "release/nobadfonts-${version}-source.zip" ]; then
-            mv "release/nobadfonts-${version}-source.zip" "release/NoBadFonts-${version}-Extension-Source.zip"
-          fi
+          node -e "
+            const fs = require('fs');
+            const key = JSON.parse(fs.readFileSync('src/assets/manifest/manifest-dev.json', 'utf8')).key;
+            const path = 'dist/manifest.json';
+            const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+            fs.writeFileSync(path, JSON.stringify({ ...manifest, key }));
+          "
+          (cd dist && zip -r -X -q "../release/NoBadFonts-${version}-Chromium-Beta.zip" . -x .build-complete)
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
